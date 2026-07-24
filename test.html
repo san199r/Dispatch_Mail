@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dispatch Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EEF2F0;
+    --surface:#FFFFFF;
+    --ink:#14201C;
+    --ink-soft:#5B6864;
+    --line:#D8DED9;
+    --primary:#3B6E62;
+    --primary-soft:#E4EDE9;
+    --amber:#B9812C;
+    --amber-soft:#F7ECD8;
+    --brick:#A6432F;
+    --brick-soft:#F6E3DE;
+    --slate:#4A6FA5;
+    --slate-soft:#E5EBF4;
+    --violet:#6A4EA0;
+    --violet-soft:#E9E4F5;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;font-size:14px;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  h1,h2,h3{font-family:'Space Grotesk',sans-serif;margin:0;}
+  button{font-family:'Inter',sans-serif;cursor:pointer;border:none;border-radius:8px;font-weight:600;}
+  input,select,textarea{font-family:'Inter',sans-serif;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--surface);color:var(--ink);}
+
+  .app{max-width:1360px;margin:0 auto;padding:22px 24px 60px;}
+
+  .topbar{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:20px;flex-wrap:wrap;gap:14px;}
+  .brand{display:flex;align-items:center;gap:12px;}
+  .brand-mark{width:38px;height:38px;border-radius:9px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk';font-weight:700;font-size:18px;flex-shrink:0;}
+  .brand h1{font-size:21px;letter-spacing:-0.01em;}
+  .brand .tag{margin:2px 0 0;color:var(--ink-soft);font-size:13px;}
+
+  .stats{display:flex;gap:10px;flex-wrap:wrap;}
+  .stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:8px 14px;min-width:74px;text-align:center;transition:box-shadow .15s, transform .15s;}
+  .stat.clickable{cursor:pointer;}
+  .stat.clickable:hover{transform:translateY(-1px);box-shadow:0 3px 10px rgba(20,32,28,0.08);}
+  .stat.active{outline:2px solid var(--primary);}
+  .stat .n{font-family:'Space Grotesk';font-size:18px;font-weight:700;}
+  .stat .l{font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;}
+  .stat.due .n{color:var(--brick);}
+  .stat.sent .n{color:var(--primary);}
+  .stat.pending .n{color:var(--amber);}
+  .stat.replied .n{color:var(--violet);}
+
+  .layout{display:grid;grid-template-columns:250px 1fr;gap:18px;align-items:start;}
+  @media (max-width:860px){.layout{grid-template-columns:1fr;}}
+
+  .desks{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px;}
+  .desks-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .desks h3{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);}
+  .desk{border:1px solid var(--line);border-radius:8px;padding:9px 10px;margin-bottom:8px;transition:border-color .15s, background .15s;}
+  .desk.active{border-color:var(--primary);background:var(--primary-soft);}
+  .desk:last-child{margin-bottom:0;}
+  .desk-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;gap:6px;}
+  .desk-name{font-weight:600;font-size:13px;cursor:pointer;flex:1;}
+  .desk-icons{display:flex;gap:4px;flex-shrink:0;}
+  .icon-btn{background:transparent;border:none;color:var(--ink-soft);padding:2px 4px;font-size:12px;border-radius:4px;}
+  .icon-btn:hover{background:var(--bg);color:var(--ink);}
+  .desk-angle{font-size:11px;color:var(--ink-soft);margin-bottom:6px;cursor:pointer;}
+  .desk-load{font-size:11px;color:var(--ink-soft);}
+  .desk-bar{height:5px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:5px;}
+  .desk-bar-fill{height:100%;background:var(--primary);}
+  .desk-cap-warn{color:var(--brick);font-weight:600;}
+  .add-desk-btn{width:100%;margin-top:6px;}
+  .clear-filter{margin-top:8px;width:100%;}
+  .rules-btn{width:100%;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);}
+
+  .board{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px;min-height:400px;}
+  .board-controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center;}
+  .board-controls input{flex:1;min-width:160px;}
+  .btn-primary{background:var(--primary);color:#fff;padding:9px 14px;font-size:13px;}
+  .btn-primary:hover{background:#2f584e;}
+  .btn-ghost{background:var(--primary-soft);color:var(--primary);padding:9px 14px;font-size:13px;}
+  .btn-ghost:hover{background:#d6e4de;}
+  .btn-warn{background:var(--brick-soft);color:var(--brick);padding:9px 14px;font-size:13px;}
+  .btn-warn:hover{background:#f0d3cb;}
+  .btn-danger{background:var(--brick);color:#fff;padding:9px 14px;font-size:13px;}
+  .btn-danger:hover{background:#8c3626;}
+  .btn-sm{padding:5px 10px;font-size:12px;border-radius:6px;}
+
+  .filter-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+  .chip{padding:5px 11px;border-radius:999px;font-size:12px;font-weight:600;background:var(--bg);color:var(--ink-soft);border:1px solid var(--line);}
+  .chip.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+
+  table.ledger{width:100%;border-collapse:collapse;}
+  .ledger thead th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);padding:8px 10px;border-bottom:1px solid var(--line);}
+  .ledger tbody td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:middle;font-size:13px;}
+  .ledger tbody tr:hover{background:#FAFBFA;cursor:pointer;}
+  .name-cell .em{display:block;color:var(--ink-soft);font-size:11.5px;}
+  .pill{display:inline-block;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:600;white-space:nowrap;}
+  .pill-pending{background:var(--amber-soft);color:var(--amber);}
+  .pill-sent{background:var(--slate-soft);color:var(--slate);}
+  .pill-due{background:var(--brick-soft);color:var(--brick);}
+  .pill-done{background:var(--primary-soft);color:var(--primary);}
+  .pill-replied{background:var(--violet-soft);color:var(--violet);}
+  .acct-tag{font-size:11.5px;color:var(--ink-soft);}
+  .empty{text-align:center;padding:50px 20px;color:var(--ink-soft);}
+  .empty h3{margin-bottom:6px;color:var(--ink);}
+
+  .modal-backdrop{position:fixed;inset:0;background:rgba(15,20,18,0.45);display:none;align-items:center;justify-content:center;z-index:50;padding:20px;}
+  .modal-backdrop.open{display:flex;}
+  .modal{background:var(--surface);border-radius:14px;max-width:600px;width:100%;max-height:88vh;overflow-y:auto;padding:22px;}
+  .modal h2{font-size:17px;margin-bottom:4px;}
+  .modal .sub{font-size:12px;color:var(--ink-soft);margin-bottom:14px;}
+  .modal label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);margin:12px 0 4px;}
+  .modal input,.modal select,.modal textarea{width:100%;}
+  .modal textarea{min-height:70px;resize:vertical;}
+  .email-preview{background:#FAFAF8;border:1px solid var(--line);border-radius:8px;padding:12px;font-size:13px;line-height:1.55;white-space:pre-wrap;margin-top:6px;max-height:280px;overflow-y:auto;}
+  .email-subject{font-weight:600;margin-bottom:8px;padding-bottom:8px;border-bottom:1px dashed var(--line);}
+  .modal-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}
+  .modal-close{position:absolute;top:16px;right:18px;}
+  .modal-wrap{position:relative;}
+  .stage-note{font-size:12px;color:var(--ink-soft);background:var(--amber-soft);border-radius:8px;padding:8px 10px;margin-top:10px;}
+  .status-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;z-index:100;opacity:0;transition:opacity .2s;pointer-events:none;}
+  .toast.show{opacity:1;}
+  .field-row{display:flex;gap:8px;}
+  .field-row > div{flex:1;}
+  .followup-block{border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px;}
+  .followup-block h4{font-size:13px;margin-bottom:2px;}
+  .followup-block .day-row{display:flex;align-items:center;gap:8px;margin:8px 0;}
+  .followup-block .day-row input{width:70px;}
+  .hint{font-size:11px;color:var(--ink-soft);margin-top:4px;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark">◈</div>
+      <div>
+        <h1>Dispatch Board</h1>
+        <p class="tag">RealSupermarket outreach — one contact, one desk, no overlap</p>
+      </div>
+    </div>
+    <div class="stats" id="stats"></div>
+  </div>
+
+  <div class="layout">
+    <aside class="desks">
+      <div class="desks-head">
+        <h3>Sending desks</h3>
+      </div>
+      <div id="desksList"></div>
+      <button class="btn-sm btn-primary add-desk-btn" id="addDeskBtn">+ Add desk</button>
+      <button class="btn-sm btn-ghost clear-filter" id="clearDeskFilter" style="display:none;">Clear desk filter</button>
+      <button class="btn-sm btn-ghost rules-btn" id="openFollowupRules">⚙ Auto Follow-up Rules</button>
+    </aside>
+
+    <main class="board">
+      <div class="board-controls">
+        <button class="btn-primary" id="openAddModal">+ Add contacts</button>
+        <button class="btn-ghost" id="autoAssignBtn">Auto-assign desks</button>
+        <button class="btn-warn" id="sendAllDueBtn" style="display:none;">Send all due follow-ups</button>
+        <input id="searchBox" placeholder="Search name, email, market…">
+        <button class="btn-sm btn-ghost" id="exportCsvBtn">Export CSV</button>
+      </div>
+      <div class="filter-row" id="filterRow"></div>
+      <table class="ledger" id="ledgerTable">
+        <thead>
+          <tr>
+            <th>Contact</th>
+            <th>Market</th>
+            <th>Desk</th>
+            <th>Status</th>
+            <th>Last touch</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="ledgerBody"></tbody>
+      </table>
+      <div class="empty" id="emptyState" style="display:none;">
+        <h3>No contacts match</h3>
+        <p>Try clearing your filters, or add contacts to get started.</p>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Add contacts modal -->
+<div class="modal-backdrop" id="addBackdrop">
+  <div class="modal modal-wrap">
+    <button class="btn-sm btn-ghost modal-close" id="closeAddModal">Close</button>
+    <h2>Add contacts</h2>
+    <p class="sub">One per line: <span class="mono">Name, email, market</span> (market optional)</p>
+    <textarea id="pasteArea" style="min-height:160px;" placeholder="Sarah Cole, sarah@investorgroup.com, Dallas TX
+Mike Torres, mike.t@example.com
+Priya Nandan, priya@nandanrealty.com, Austin TX"></textarea>
+    <div class="modal-actions">
+      <button class="btn-primary" id="parseAddContacts">Add to board</button>
+      <button class="btn-ghost" id="addOneManual">Add single contact instead</button>
+    </div>
+    <div id="manualFields" style="display:none;margin-top:12px;">
+      <div class="field-row">
+        <div><label>Name</label><input id="manName"></div>
+        <div><label>Email</label><input id="manEmail"></div>
+      </div>
+      <label>Market (optional)</label>
+      <input id="manMarket">
+      <div class="modal-actions">
+        <button class="btn-primary" id="addManualBtn">Add contact</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Contact detail modal -->
+<div class="modal-backdrop" id="detailBackdrop">
+  <div class="modal modal-wrap" id="detailModal"></div>
+</div>
+
+<!-- Desk add/edit modal -->
+<div class="modal-backdrop" id="deskBackdrop">
+  <div class="modal modal-wrap" id="deskModal"></div>
+</div>
+
+<!-- Follow-up rules modal -->
+<div class="modal-backdrop" id="followupBackdrop">
+  <div class="modal modal-wrap" id="followupModal"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'dispatch-board-state-v2';
+
+// Starter personas — used only to seed the first-run desks and as optional
+// "start from" presets when manually adding a new desk. After that, every
+// desk's subject/body lives on the desk itself and is fully editable.
+const STARTER_TEMPLATES = [
+  {
+    persona:'Noal', angle:'Direct Value',
+    subject:'Fresh off-market leads for {MARKET} investors',
+    subjectNoMarket:'Fresh off-market leads for real estate investors',
+    body:`Hi {NAME},
+
+I noticed you're active in real estate investing, and wanted to reach out directly.
+
+I run RealSupermarket — we provide daily-updated motivated seller data pulled straight from county records. Not recycled lists that everyone else already called.
+
+What we offer:
+• Probate & pre-probate leads (families liquidating inherited property)
+• Pre-foreclosure & foreclosure filings
+• Tax delinquent property owners
+• Absentee landlord data
+• Skip tracing included (50-60% phone accuracy)
+
+We've worked with 16,000+ real estate professionals nationwide, and our data comes with 99% accuracy on property details.
+
+I'd like to send you a free 15-record sample for your target market — no cost, no commitment. Just reply with your city or county, and I'll have it in your inbox within 24 hours.
+
+Would this be useful for your current deal flow?
+
+Best regards,
+Noal Smith
+RealSupermarket.com
+610-202-9306`
+  },
+  {
+    persona:'Julie', angle:'Problem / Solution',
+    subject:"Stop chasing cold leads — here's a better way",
+    subjectNoMarket:"Stop chasing cold leads — here's a better way",
+    body:`Hi {NAME},
+
+Quick question: How much time does your team spend calling leads that never pick up?
+
+Most real estate data providers sell lists that are 30-60 days old. By the time you call, five other investors already tried — and the seller stopped answering unknown numbers.
+
+We do it differently.
+
+RealSupermarket pulls directly from county sources daily. When you get a Pre-Foreclosure or Tax Delinquent record from us, it was often flagged within the last 24-48 hours. Fresh data = people who still answer the phone.
+
+Here's what's included in every list:
+→ Owner name & mailing address
+→ Property details & parcel ID
+→ Available phone numbers (skip traced)
+→ Email addresses where available
+
+I'd like to send you a free sample — 15-20 records for whatever county you're targeting. See the difference in data freshness for yourself.
+
+What market are you currently working?
+
+Best,
+Julie Vanderblue
+RealSupermarket.com
+610-202-9306`
+  },
+  {
+    persona:'Stacy', angle:'Social Proof',
+    subject:'How 16,000+ investors are finding off-market deals',
+    subjectNoMarket:'How 16,000+ investors are finding off-market deals',
+    body:`Hi {NAME},
+
+I wanted to introduce myself — I work with RealSupermarket, a real estate data provider trusted by over 16,000 investors, agents, and wholesalers across the US.
+
+We specialize in delivering off-market opportunities before they hit MLS or LoopNet:
+
+📌 Probate & inheritance leads
+📌 Pre-foreclosure & foreclosure filings
+📌 Tax delinquent properties
+📌 Absentee owner records
+📌 High equity & FSBO leads
+
+For your market, I'd love to send a complimentary sample — 15-25 records, no cost, no obligation. This way you can evaluate quality before deciding if it's a fit.
+
+Which county or zip code should I target for your sample?
+
+Looking forward to connecting,
+
+Stacy Gwendolyne
+RealSupermarket.com
+610-202-9306`
+  },
+  {
+    persona:'Rajini', angle:'Curiosity Hook',
+    subject:'Are your current leads actually answering calls?',
+    subjectNoMarket:'Are your current leads actually answering calls?',
+    body:`Hi {NAME},
+
+I'll keep this brief.
+
+Most real estate lead providers sell the SAME data to 10+ investors in your area. By the time you call, that seller has already heard the pitch five times and stopped answering.
+
+RealSupermarket pulls fresh data daily directly from county records — probate filings, pre-foreclosure notices, tax delinquent properties, and absentee owner records. Because it's updated so frequently, you're often the first (or one of the first) callers.
+
+The difference shows up in your connect rate.
+
+I'd like to send you a free sample for your target area — 15-20 records, zero cost. You can compare it directly against what you're currently using.
+
+What market are you focused on right now?
+
+Best,
+Rajini Kumar
+RealSupermarket.com
+610-202-9306`
+  },
+  {
+    persona:'Asha', angle:'Partnership',
+    subject:'Exploring a data partnership for your deal pipeline',
+    subjectNoMarket:'Exploring a data partnership for your deal pipeline',
+    body:`Hi {NAME},
+
+I came across your profile and wanted to reach out about a potential collaboration.
+
+I work with RealSupermarket, providing real estate investors and agents with fresh, county-sourced property data — probate, pre-foreclosure, tax delinquent, and absentee owner leads.
+
+I'm happy to start with a free sample so you can evaluate quality firsthand — no pressure either direction.
+
+What area are you currently targeting for deals?
+
+Best regards,
+Asha Ch
+RealSupermarket.com
+610-202-9306`
+  },
+  {
+    persona:'Everett', angle:'ROI Focused',
+    subject:'The math behind fresh real estate data',
+    subjectNoMarket:'The math behind fresh real estate data',
+    body:`Hi {NAME},
+
+If you're calling 100 leads and getting a 2-3% conversion rate, that's normal for STALE data (30-60 days old, already called by multiple investors).
+
+When data is fresh — pulled within the last 24-48 hours — connect rates and conversion often improve significantly, simply because sellers haven't been contacted yet.
+
+That's the model RealSupermarket runs on. All records include owner details, property information, and skip-traced phone numbers where available.
+
+Want to test the difference? I'll send a free 15-record sample for your market — no cost, no commitment.
+
+Which county should I pull for you?
+
+Best,
+Everett Henderson
+RealSupermarket.com
+610-202-9306`
+  }
+];
+
+const DAILY_CAP = 40;
+const FILTERS = [
+  {key:'all', label:'All'},
+  {key:'pending', label:'Not sent'},
+  {key:'waiting', label:'Waiting'},
+  {key:'due', label:'Follow-up due'},
+  {key:'replied', label:'Replied'},
+  {key:'complete', label:'Sequence done'}
+];
+
+function defaultFollowups(){
+  return [
+    { stage:1, day:3,
+      subject:'Re: {ORIGINAL_SUBJECT}',
+      body:`Hi {NAME}, just floating this back to the top of your inbox in case it got buried. Happy to send that free sample whenever you're ready — just reply with your target county. —{PERSONA}` },
+    { stage:2, day:6,
+      subject:'One more thing — free sample still available',
+      body:`Hi {NAME}, wanted to follow up once more. The free sample offer (15-20 records, your choice of market) is still open — no cost, no obligation. If timing isn't right, no worries at all. —{PERSONA}` },
+    { stage:3, day:10,
+      subject:'Last note from me',
+      body:`Hi {NAME}, I'll stop following up after this — didn't want to be a bother. If you ever need fresh off-market data down the road, feel free to reach out anytime. Wishing you continued success. —{PERSONA}` }
+  ];
+}
+
+function defaultDesks(){
+  return STARTER_TEMPLATES.map((t,i)=>({
+    id: 'd'+(i+1),
+    name: t.persona,
+    angle: t.angle,
+    subject: t.subject,
+    subjectNoMarket: t.subjectNoMarket,
+    body: t.body
+  }));
+}
+
+let state = {
+  desks: defaultDesks(),
+  followups: defaultFollowups(),
+  contacts: [], // {id,name,email,market,accountId,sentDate,followupsSent:[{stage,date}],replied:false,closed:false}
+};
+
+let activeContactId = null;
+let currentFilter = 'all';
+let deskFilter = null;
+let editingDeskId = null; // null = add mode
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1800);
+}
+
+async function saveState(){
+  try{
+    await window.storage.set(STORAGE_KEY, JSON.stringify(state), false);
+  }catch(e){ console.error('save failed', e); }
+}
+
+async function loadState(){
+  try{
+    const res = await window.storage.get(STORAGE_KEY, false);
+    if(res && res.value){
+      const parsed = JSON.parse(res.value);
+      if(parsed.desks && parsed.desks.length) state.desks = parsed.desks;
+      if(parsed.followups && parsed.followups.length) state.followups = parsed.followups;
+      if(parsed.contacts) state.contacts = parsed.contacts;
+    }
+  }catch(e){ /* no saved state yet */ }
+}
+
+function daysBetween(dateStr){
+  const then = new Date(dateStr).getTime();
+  const now = Date.now();
+  return Math.floor((now - then) / 86400000);
+}
+
+function contactStage(c){
+  if(c.replied) return {status:'replied'};
+  if(c.closed) return {status:'closed'};
+  if(!c.sentDate) return {status:'pending'};
+  const sentDays = daysBetween(c.sentDate);
+  const fCount = c.followupsSent.length;
+  const followups = state.followups;
+  if(fCount >= followups.length) return {status:'complete', sentDays};
+  const nextFollowup = followups[fCount];
+  const isDue = sentDays >= nextFollowup.day;
+  return { status: isDue ? 'due' : 'waiting', nextFollowup, sentDays };
+}
+
+function lastTouchDays(c){
+  if(c.followupsSent.length){
+    return daysBetween(c.followupsSent[c.followupsSent.length-1].date);
+  }
+  if(c.sentDate) return daysBetween(c.sentDate);
+  return null;
+}
+
+function statusPill(c){
+  const s = contactStage(c);
+  switch(s.status){
+    case 'pending': return `<span class="pill pill-pending">Not sent</span>`;
+    case 'waiting': return `<span class="pill pill-sent">Sent · waiting</span>`;
+    case 'due': return `<span class="pill pill-due">Follow-up ${s.nextFollowup.stage} due</span>`;
+    case 'complete': return `<span class="pill pill-done">Sequence done</span>`;
+    case 'replied': return `<span class="pill pill-replied">Replied</span>`;
+    case 'closed': return `<span class="pill pill-done">Closed</span>`;
+  }
+}
+
+function deskById(id){
+  return state.desks.find(d=>d.id===id) || null;
+}
+
+function render(){
+  renderDesks();
+  renderStats();
+  renderFilterRow();
+  renderLedger();
+  const due = state.contacts.filter(c=>contactStage(c).status==='due').length;
+  document.getElementById('sendAllDueBtn').style.display = due>0 ? 'inline-block' : 'none';
+  document.getElementById('sendAllDueBtn').textContent = `Send all due follow-ups (${due})`;
+}
+
+function renderDesks(){
+  const el = document.getElementById('desksList');
+  if(state.desks.length===0){
+    el.innerHTML = `<p class="hint">No desks yet. Add one below.</p>`;
+    return;
+  }
+  el.innerHTML = state.desks.map(a=>{
+    const assigned = state.contacts.filter(c=>c.accountId===a.id);
+    const sentToday = assigned.filter(c=>c.sentDate && daysBetween(c.sentDate)===0).length;
+    const pct = Math.min(100, Math.round((sentToday/DAILY_CAP)*100));
+    const warn = sentToday >= DAILY_CAP;
+    return `<div class="desk ${deskFilter===a.id?'active':''}" data-desk="${a.id}">
+      <div class="desk-top">
+        <span class="desk-name" data-filter-desk="${a.id}">${a.name}</span>
+        <span class="desk-icons">
+          <button class="icon-btn" data-edit-desk="${a.id}" title="Edit template">✎</button>
+          <button class="icon-btn" data-del-desk="${a.id}" title="Delete desk">🗑</button>
+        </span>
+      </div>
+      <div class="desk-angle" data-filter-desk="${a.id}">${a.angle} · ${assigned.length} contact(s)</div>
+      <div class="desk-load ${warn?'desk-cap-warn':''}">${sentToday}/${DAILY_CAP} sent today</div>
+      <div class="desk-bar"><div class="desk-bar-fill" style="width:${pct}%;background:${warn?'#A6432F':'#3B6E62'}"></div></div>
+    </div>`;
+  }).join('');
+
+  el.querySelectorAll('[data-filter-desk]').forEach(elm=>{
+    elm.addEventListener('click', ()=>{
+      const id = elm.dataset.filterDesk;
+      deskFilter = deskFilter === id ? null : id;
+      document.getElementById('clearDeskFilter').style.display = deskFilter ? 'block' : 'none';
+      renderDesks();
+      renderLedger();
+    });
+  });
+  el.querySelectorAll('[data-edit-desk]').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{ e.stopPropagation(); openDeskModal(btn.dataset.editDesk); });
+  });
+  el.querySelectorAll('[data-del-desk]').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const id = btn.dataset.delDesk;
+      const affected = state.contacts.filter(c=>c.accountId===id).length;
+      const msg = affected>0
+        ? `Delete this desk? ${affected} contact(s) assigned to it will become unassigned.`
+        : `Delete this desk?`;
+      if(confirm(msg)){
+        state.contacts.forEach(c=>{ if(c.accountId===id) c.accountId=null; });
+        state.desks = state.desks.filter(d=>d.id!==id);
+        if(deskFilter===id) deskFilter=null;
+        saveState(); render();
+        toast('Desk deleted');
+      }
+    });
+  });
+}
+
+function renderStats(){
+  const total = state.contacts.length;
+  let pending=0, waiting=0, due=0, replied=0;
+  state.contacts.forEach(c=>{
+    const s = contactStage(c).status;
+    if(s==='pending') pending++;
+    else if(s==='waiting') waiting++;
+    else if(s==='due') due++;
+    else if(s==='replied') replied++;
+  });
+  document.getElementById('stats').innerHTML = `
+    <div class="stat clickable ${currentFilter==='all'?'active':''}" data-filter="all"><div class="n">${total}</div><div class="l">Contacts</div></div>
+    <div class="stat pending clickable ${currentFilter==='pending'?'active':''}" data-filter="pending"><div class="n">${pending}</div><div class="l">Not sent</div></div>
+    <div class="stat sent clickable ${currentFilter==='waiting'?'active':''}" data-filter="waiting"><div class="n">${waiting}</div><div class="l">Waiting</div></div>
+    <div class="stat due clickable ${currentFilter==='due'?'active':''}" data-filter="due"><div class="n">${due}</div><div class="l">Follow-up due</div></div>
+    <div class="stat replied clickable ${currentFilter==='replied'?'active':''}" data-filter="replied"><div class="n">${replied}</div><div class="l">Replied</div></div>
+  `;
+  document.getElementById('stats').querySelectorAll('.stat').forEach(elm=>{
+    elm.addEventListener('click', ()=>{ currentFilter = elm.dataset.filter; render(); });
+  });
+}
+
+function renderFilterRow(){
+  const row = document.getElementById('filterRow');
+  row.innerHTML = FILTERS.map(f=>`<button class="chip ${currentFilter===f.key?'active':''}" data-filter="${f.key}">${f.label}</button>`).join('');
+  row.querySelectorAll('.chip').forEach(ch=>{
+    ch.addEventListener('click', ()=>{ currentFilter = ch.dataset.filter; render(); });
+  });
+}
+
+function renderLedger(){
+  const body = document.getElementById('ledgerBody');
+  const empty = document.getElementById('emptyState');
+  const q = document.getElementById('searchBox').value.trim().toLowerCase();
+  let list = state.contacts;
+  if(currentFilter !== 'all'){
+    list = list.filter(c => contactStage(c).status === currentFilter);
+  }
+  if(deskFilter !== null){
+    list = list.filter(c => c.accountId === deskFilter);
+  }
+  if(q){
+    list = list.filter(c => (c.name+c.email+(c.market||'')).toLowerCase().includes(q));
+  }
+  if(list.length===0){
+    body.innerHTML=''; empty.style.display='block';
+    return;
+  }
+  empty.style.display='none';
+  body.innerHTML = list.map(c=>{
+    const acct = c.accountId ? deskById(c.accountId) : null;
+    const lt = lastTouchDays(c);
+    return `<tr data-id="${c.id}">
+      <td class="name-cell">${c.name}<span class="em">${c.email}</span></td>
+      <td>${c.market||'—'}</td>
+      <td class="acct-tag">${acct ? acct.name+' · '+acct.angle : '<em>unassigned</em>'}</td>
+      <td>${statusPill(c)}</td>
+      <td class="acct-tag">${lt===null ? '—' : lt+'d ago'}</td>
+      <td><button class="btn-sm btn-ghost open-detail">Open</button></td>
+    </tr>`;
+  }).join('');
+  body.querySelectorAll('tr').forEach(tr=>{
+    tr.addEventListener('click', ()=>openDetail(tr.dataset.id));
+  });
+}
+
+function autoAssign(){
+  const accounts = state.desks;
+  if(accounts.length===0){ toast('Add a desk first'); return; }
+  const unassigned = state.contacts.filter(c=>!c.accountId);
+  const target = unassigned.length ? unassigned : state.contacts;
+  const counts = {};
+  accounts.forEach(a=>counts[a.id] = state.contacts.filter(c=>c.accountId===a.id).length);
+  target.forEach(c=>{
+    let best = accounts[0];
+    accounts.forEach(a=>{ if(counts[a.id] < counts[best.id]) best = a; });
+    c.accountId = best.id;
+    counts[best.id]++;
+  });
+  saveState();
+  render();
+  toast(`Assigned ${target.length} contact(s) across ${accounts.length} desks — no overlaps.`);
+}
+
+function parsePastedContacts(text){
+  return text.split('\n').map(l=>l.trim()).filter(Boolean).map(line=>{
+    const parts = line.split(',').map(p=>p.trim());
+    return { name: parts[0]||'', email: parts[1]||'', market: parts[2]||'' };
+  }).filter(p=>p.name && p.email);
+}
+
+function addContacts(newOnes){
+  newOnes.forEach(nc=>{
+    state.contacts.push({
+      id: 'c'+Date.now()+Math.random().toString(36).slice(2,7),
+      name: nc.name, email: nc.email, market: nc.market||'',
+      accountId: null, sentDate: null, followupsSent: [], replied:false, closed:false
+    });
+  });
+  saveState();
+  render();
+}
+
+function composeEmail(c){
+  const acct = deskById(c.accountId);
+  const s = contactStage(c);
+  if(s.status==='pending' || !c.sentDate){
+    const subject = c.market ? acct.subject.replace('{MARKET}', c.market) : acct.subjectNoMarket;
+    const body = acct.body.replace(/\{NAME\}/g, c.name.split(' ')[0]);
+    return { kind:'initial', subject, body };
+  }
+  if(s.status==='due'){
+    const f = s.nextFollowup;
+    const origSubject = c.market ? acct.subject.replace('{MARKET}', c.market) : acct.subjectNoMarket;
+    const subject = f.subject.replace('{ORIGINAL_SUBJECT}', origSubject);
+    const body = f.body.replace(/\{NAME\}/g, c.name.split(' ')[0]).replace('{PERSONA}', acct.name);
+    return { kind:'followup', subject, body, stage:f.stage };
+  }
+  const subject = c.market ? acct.subject.replace('{MARKET}', c.market) : acct.subjectNoMarket;
+  const body = acct.body.replace(/\{NAME\}/g, c.name.split(' ')[0]);
+  return { kind:'reference', subject, body };
+}
+
+function openDetail(id){
+  activeContactId = id;
+  const c = state.contacts.find(x=>x.id===id);
+  const modal = document.getElementById('detailModal');
+
+  if(!c.accountId){
+    if(state.desks.length===0){
+      modal.innerHTML = `
+        <button class="btn-sm btn-ghost modal-close" id="closeDetail">Close</button>
+        <h2>${c.name}</h2>
+        <p class="sub">${c.email}${c.market?' · '+c.market:''}</p>
+        <p class="stage-note">No desks exist yet. Close this and click "+ Add desk" in the sidebar first.</p>
+      `;
+      document.getElementById('closeDetail').onclick = closeDetail;
+      document.getElementById('detailBackdrop').classList.add('open');
+      return;
+    }
+    modal.innerHTML = `
+      <button class="btn-sm btn-ghost modal-close" id="closeDetail">Close</button>
+      <h2>${c.name}</h2>
+      <p class="sub">${c.email}${c.market?' · '+c.market:''}</p>
+      <p class="stage-note">This contact isn't assigned to a desk yet. Assign one so the right template and persona is locked in — every contact should hear from exactly one account.</p>
+      <label>Assign to desk</label>
+      <select id="assignSelect">
+        ${state.desks.map(a=>`<option value="${a.id}">${a.name} — ${a.angle}</option>`).join('')}
+      </select>
+      <div class="modal-actions">
+        <button class="btn-primary" id="confirmAssign">Assign</button>
+      </div>
+    `;
+    document.getElementById('confirmAssign').onclick = ()=>{
+      c.accountId = document.getElementById('assignSelect').value;
+      saveState(); render(); openDetail(id);
+    };
+  } else {
+    const email = composeEmail(c);
+    const s = contactStage(c);
+    const acct = deskById(c.accountId);
+    let stageNote = '';
+    if(s.status==='waiting') stageNote = `<div class="stage-note">Sent ${s.sentDays} day(s) ago. Next follow-up (Day ${s.nextFollowup.day}) unlocks once ${s.nextFollowup.day} days have passed. Edit the schedule via "Auto Follow-up Rules" in the sidebar.</div>`;
+    if(s.status==='complete') stageNote = `<div class="stage-note">All follow-ups sent. Sequence complete — no further automated touches.</div>`;
+    if(s.status==='replied') stageNote = `<div class="stage-note">Marked as replied. Sequence stopped.</div>`;
+
+    modal.innerHTML = `
+      <button class="btn-sm btn-ghost modal-close" id="closeDetail">Close</button>
+      <h2>${c.name}</h2>
+      <p class="sub">${c.email}${c.market?' · '+c.market:''} — desk: <strong>${acct.name}</strong> (${acct.angle})</p>
+      <div class="email-preview">
+        <div class="email-subject">${email.subject}</div>
+        <div>${email.body}</div>
+      </div>
+      ${stageNote}
+      <div class="modal-actions">
+        <button class="btn-primary" id="copyEmail">Copy email</button>
+        <button class="btn-ghost" id="mailtoBtn">Open in mail app</button>
+      </div>
+      <div class="status-row">
+        ${!c.sentDate ? `<button class="btn-sm btn-primary" id="markSent">Mark initial email sent</button>` : ''}
+        ${s.status==='due' ? `<button class="btn-sm btn-primary" id="markFollowup">Mark follow-up ${s.nextFollowup.stage} sent</button>` : ''}
+        ${!c.replied && c.sentDate ? `<button class="btn-sm btn-ghost" id="markReplied">Mark as replied</button>` : ''}
+        <button class="btn-sm btn-ghost" id="reassign">Reassign desk</button>
+      </div>
+    `;
+
+    document.getElementById('copyEmail').onclick = ()=>{
+      navigator.clipboard.writeText(`Subject: ${email.subject}\n\n${email.body}`);
+      toast('Email copied to clipboard');
+    };
+    document.getElementById('mailtoBtn').onclick = ()=>{
+      const mailto = `mailto:${encodeURIComponent(c.email)}?subject=${encodeURIComponent(email.subject)}&body=${encodeURIComponent(email.body)}`;
+      window.open(mailto, '_blank');
+    };
+    const markSentBtn = document.getElementById('markSent');
+    if(markSentBtn) markSentBtn.onclick = ()=>{
+      c.sentDate = new Date().toISOString();
+      saveState(); render(); openDetail(id);
+      toast('Marked as sent — follow-ups now on the clock');
+    };
+    const markFollowupBtn = document.getElementById('markFollowup');
+    if(markFollowupBtn) markFollowupBtn.onclick = ()=>{
+      c.followupsSent.push({stage:s.nextFollowup.stage, date:new Date().toISOString()});
+      saveState(); render(); openDetail(id);
+      toast('Follow-up logged');
+    };
+    const markRepliedBtn = document.getElementById('markReplied');
+    if(markRepliedBtn) markRepliedBtn.onclick = ()=>{
+      c.replied = true;
+      saveState(); render(); openDetail(id);
+      toast('Marked as replied — sequence stopped');
+    };
+    document.getElementById('reassign').onclick = ()=>{
+      c.accountId = null;
+      saveState(); render(); openDetail(id);
+    };
+  }
+
+  document.getElementById('closeDetail').onclick = closeDetail;
+  document.getElementById('detailBackdrop').classList.add('open');
+}
+
+function closeDetail(){
+  document.getElementById('detailBackdrop').classList.remove('open');
+  activeContactId = null;
+}
+
+function sendAllDue(){
+  let count = 0;
+  state.contacts.forEach(c=>{
+    const s = contactStage(c);
+    if(s.status==='due'){
+      c.followupsSent.push({stage:s.nextFollowup.stage, date:new Date().toISOString()});
+      count++;
+    }
+  });
+  saveState();
+  render();
+  toast(`Logged ${count} follow-up(s) as sent`);
+}
+
+function exportCsv(){
+  const rows = [['Name','Email','Market','Desk','Angle','Status','Days since last touch','Follow-ups sent','Replied']];
+  state.contacts.forEach(c=>{
+    const acct = c.accountId ? deskById(c.accountId) : null;
+    const s = contactStage(c).status;
+    const lt = lastTouchDays(c);
+    rows.push([
+      c.name, c.email, c.market||'', acct?acct.name:'', acct?acct.angle:'',
+      s, lt===null?'':String(lt), String(c.followupsSent.length), c.replied?'yes':'no'
+    ]);
+  });
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'dispatch-board-export.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('CSV exported');
+}
+
+// ---- Desk add/edit modal ----
+function openDeskModal(deskId){
+  editingDeskId = deskId || null;
+  const isEdit = !!editingDeskId;
+  const d = isEdit ? deskById(editingDeskId) : { name:'', angle:'', subject:'', subjectNoMarket:'', body:'' };
+  const modal = document.getElementById('deskModal');
+
+  const presetOptions = STARTER_TEMPLATES.map((t,i)=>`<option value="${i}">${t.persona} — ${t.angle}</option>`).join('');
+
+  modal.innerHTML = `
+    <button class="btn-sm btn-ghost modal-close" id="closeDeskModal">Close</button>
+    <h2>${isEdit ? 'Edit desk' : 'Add a new desk'}</h2>
+    <p class="sub">${isEdit ? 'This is the sending account and its email template.' : 'Manually create a new sending account with its own name and template.'}</p>
+
+    ${!isEdit ? `
+      <label>Start from a preset (optional)</label>
+      <select id="presetSelect">
+        <option value="">Blank — write my own</option>
+        ${presetOptions}
+      </select>
+    ` : ''}
+
+    <label>Desk name</label>
+    <input id="deskName" value="${d.name.replace(/"/g,'&quot;')}" placeholder="e.g. Morgan — Investor Outreach">
+
+    <label>Angle / notes (internal, not sent)</label>
+    <input id="deskAngle" value="${d.angle.replace(/"/g,'&quot;')}" placeholder="e.g. Direct value pitch">
+
+    <label>Subject line (with market)</label>
+    <input id="deskSubject" value="${d.subject.replace(/"/g,'&quot;')}" placeholder="Use {MARKET} as a placeholder">
+
+    <label>Subject line (no market given)</label>
+    <input id="deskSubjectNoMarket" value="${d.subjectNoMarket.replace(/"/g,'&quot;')}" placeholder="Fallback subject when contact has no market">
+
+    <label>Email body</label>
+    <textarea id="deskBody" style="min-height:200px;" placeholder="Use {NAME} as a placeholder for first name">${d.body}</textarea>
+    <p class="hint">Placeholders: {NAME} → contact's first name, {MARKET} → contact's market (subject line only).</p>
+
+    <div class="modal-actions">
+      <button class="btn-primary" id="saveDeskBtn">${isEdit ? 'Save changes' : 'Create desk'}</button>
+      ${isEdit ? `<button class="btn-danger" id="deleteDeskBtn">Delete desk</button>` : ''}
+    </div>
+  `;
+
+  document.getElementById('closeDeskModal').onclick = ()=> document.getElementById('deskBackdrop').classList.remove('open');
+
+  const presetSelect = document.getElementById('presetSelect');
+  if(presetSelect){
+    presetSelect.addEventListener('change', ()=>{
+      const idx = presetSelect.value;
+      if(idx===''){ return; }
+      const t = STARTER_TEMPLATES[Number(idx)];
+      document.getElementById('deskName').value = t.persona;
+      document.getElementById('deskAngle').value = t.angle;
+      document.getElementById('deskSubject').value = t.subject;
+      document.getElementById('deskSubjectNoMarket').value = t.subjectNoMarket;
+      document.getElementById('deskBody').value = t.body;
+    });
+  }
+
+  document.getElementById('saveDeskBtn').onclick = ()=>{
+    const name = document.getElementById('deskName').value.trim();
+    const angle = document.getElementById('deskAngle').value.trim();
+    const subject = document.getElementById('deskSubject').value.trim();
+    const subjectNoMarket = document.getElementById('deskSubjectNoMarket').value.trim();
+    const body = document.getElementById('deskBody').value;
+    if(!name || !subject || !body){ toast('Name, subject, and body are required'); return; }
+    if(isEdit){
+      Object.assign(d, {name, angle, subject, subjectNoMarket: subjectNoMarket||subject, body});
+    } else {
+      state.desks.push({
+        id: 'd'+Date.now()+Math.random().toString(36).slice(2,6),
+        name, angle, subject, subjectNoMarket: subjectNoMarket||subject, body
+      });
+    }
+    saveState();
+    render();
+    document.getElementById('deskBackdrop').classList.remove('open');
+    toast(isEdit ? 'Desk updated' : 'Desk created');
+  };
+
+  const delBtn = document.getElementById('deleteDeskBtn');
+  if(delBtn){
+    delBtn.onclick = ()=>{
+      const affected = state.contacts.filter(c=>c.accountId===editingDeskId).length;
+      const msg = affected>0
+        ? `Delete this desk? ${affected} contact(s) assigned to it will become unassigned.`
+        : `Delete this desk?`;
+      if(confirm(msg)){
+        state.contacts.forEach(c=>{ if(c.accountId===editingDeskId) c.accountId=null; });
+        state.desks = state.desks.filter(x=>x.id!==editingDeskId);
+        if(deskFilter===editingDeskId) deskFilter=null;
+        saveState(); render();
+        document.getElementById('deskBackdrop').classList.remove('open');
+        toast('Desk deleted');
+      }
+    };
+  }
+
+  document.getElementById('deskBackdrop').classList.add('open');
+}
+
+// ---- Follow-up rules modal ----
+function openFollowupModal(){
+  const modal = document.getElementById('followupModal');
+  modal.innerHTML = `
+    <button class="btn-sm btn-ghost modal-close" id="closeFollowupModal">Close</button>
+    <h2>Auto Follow-up Rules</h2>
+    <p class="sub">Once a contact's initial email is marked sent, the board watches the days-since-sent and flags them "Follow-up due" once each threshold below is crossed. Nothing sends itself — you review and click "Send" — but the schedule and wording are fully yours to edit.</p>
+    <div id="followupBlocks"></div>
+    <div class="modal-actions">
+      <button class="btn-primary" id="saveFollowupsBtn">Save schedule</button>
+      <button class="btn-ghost" id="resetFollowupsBtn">Reset to default</button>
+    </div>
+  `;
+  renderFollowupBlocks();
+  document.getElementById('closeFollowupModal').onclick = ()=> document.getElementById('followupBackdrop').classList.remove('open');
+  document.getElementById('saveFollowupsBtn').onclick = ()=>{
+    const blocks = document.querySelectorAll('.followup-block');
+    const updated = [];
+    blocks.forEach((b,i)=>{
+      const day = Number(b.querySelector('.fu-day').value) || (i+1)*3;
+      const subject = b.querySelector('.fu-subject').value;
+      const body = b.querySelector('.fu-body').value;
+      updated.push({ stage:i+1, day, subject, body });
+    });
+    updated.sort((a,b)=>a.day-b.day).forEach((f,i)=>f.stage=i+1);
+    state.followups = updated;
+    saveState();
+    render();
+    document.getElementById('followupBackdrop').classList.remove('open');
+    toast('Follow-up schedule saved');
+  };
+  document.getElementById('resetFollowupsBtn').onclick = ()=>{
+    state.followups = defaultFollowups();
+    renderFollowupBlocks();
+    toast('Reset to default schedule');
+  };
+  document.getElementById('followupBackdrop').classList.add('open');
+}
+
+function renderFollowupBlocks(){
+  const wrap = document.getElementById('followupBlocks');
+  wrap.innerHTML = state.followups.map((f,i)=>`
+    <div class="followup-block">
+      <h4>Follow-up ${i+1}</h4>
+      <div class="day-row">
+        <span class="hint">Send after</span>
+        <input type="number" class="fu-day" min="1" value="${f.day}">
+        <span class="hint">day(s) with no reply</span>
+      </div>
+      <label>Subject</label>
+      <input class="fu-subject" value="${f.subject.replace(/"/g,'&quot;')}">
+      <label>Body</label>
+      <textarea class="fu-body" style="min-height:100px;">${f.body}</textarea>
+      <p class="hint">Placeholders: {NAME}, {PERSONA} (desk name), {ORIGINAL_SUBJECT}</p>
+    </div>
+  `).join('');
+}
+
+// --- wiring ---
+document.getElementById('addDeskBtn').addEventListener('click', ()=> openDeskModal(null));
+document.getElementById('openFollowupRules').addEventListener('click', openFollowupModal);
+
+document.getElementById('clearDeskFilter').addEventListener('click', ()=>{
+  deskFilter = null;
+  document.getElementById('clearDeskFilter').style.display = 'none';
+  render();
+});
+
+document.getElementById('autoAssignBtn').addEventListener('click', autoAssign);
+document.getElementById('sendAllDueBtn').addEventListener('click', sendAllDue);
+document.getElementById('exportCsvBtn').addEventListener('click', exportCsv);
+document.getElementById('searchBox').addEventListener('input', renderLedger);
+
+document.getElementById('openAddModal').addEventListener('click', ()=>{
+  document.getElementById('addBackdrop').classList.add('open');
+});
+document.getElementById('closeAddModal').addEventListener('click', ()=>{
+  document.getElementById('addBackdrop').classList.remove('open');
+  document.getElementById('manualFields').style.display='none';
+});
+document.getElementById('parseAddContacts').addEventListener('click', ()=>{
+  const text = document.getElementById('pasteArea').value;
+  const parsed = parsePastedContacts(text);
+  if(parsed.length===0){ toast('No valid contacts found — use "Name, email, market" per line'); return; }
+  addContacts(parsed);
+  document.getElementById('pasteArea').value='';
+  document.getElementById('addBackdrop').classList.remove('open');
+  toast(`Added ${parsed.length} contact(s)`);
+});
+document.getElementById('addOneManual').addEventListener('click', ()=>{
+  document.getElementById('manualFields').style.display='block';
+});
+document.getElementById('addManualBtn').addEventListener('click', ()=>{
+  const name = document.getElementById('manName').value.trim();
+  const email = document.getElementById('manEmail').value.trim();
+  const market = document.getElementById('manMarket').value.trim();
+  if(!name || !email){ toast('Name and email are required'); return; }
+  addContacts([{name,email,market}]);
+  document.getElementById('manName').value='';
+  document.getElementById('manEmail').value='';
+  document.getElementById('manMarket').value='';
+  document.getElementById('manualFields').style.display='none';
+  document.getElementById('addBackdrop').classList.remove('open');
+  toast('Contact added');
+});
+
+[document.getElementById('addBackdrop'), document.getElementById('detailBackdrop'), document.getElementById('deskBackdrop'), document.getElementById('followupBackdrop')].forEach(bd=>{
+  bd.addEventListener('click', (e)=>{ if(e.target===bd) bd.classList.remove('open'); });
+});
+
+// init
+(async function init(){
+  await loadState();
+  render();
+})();
+</script>
+</body>
+</html>
