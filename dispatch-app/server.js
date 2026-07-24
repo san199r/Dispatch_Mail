@@ -688,10 +688,10 @@ const server = createServer(async (req, res) => {
         return;
       }
       try {
-        const t = transporterFor(senderEmail, appPassword);
-        await t.verify();
+        const { transporter } = await getTransporterFor(senderEmail, appPassword);
+        await transporter.verify();
         if (testRecipient) {
-          await t.sendMail({
+          await transporter.sendMail({
             from: senderEmail,
             to: testRecipient,
             subject: 'Dispatch Board — SMTP Test Email',
