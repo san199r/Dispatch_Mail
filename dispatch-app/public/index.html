@@ -271,14 +271,8 @@
           <button class="btn-ghost" id="openCreateCampaignBtn" style="background:var(--emerald-soft);color:var(--emerald);border:1px solid #A7F3D0;">🚀 New Campaign</button>
           <button class="btn-ghost" id="openContactQuoteBtn" style="background:#EEF2FF;color:#4F46E5;border:1px solid #C7D2FE;">📋 Custom Quote Form</button>
           <input id="searchBox" placeholder="Search contact name, email, market…">
+          <button class="btn-sm btn-ghost" id="resetAllStatusBtn">🔄 Reset All Status</button>
           <button class="btn-sm btn-ghost" id="exportCsvBtn">Export CSV</button>
-        </div>
-
-        <div id="setupNotice" style="display:none;background:var(--amber-soft);border:1px solid #FCD34D;border-radius:10px;padding:12px 16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;">
-          <span style="font-size:13px;color:var(--amber);font-weight:500;">
-            💡 <strong>Mail Credentials Required:</strong> Add your sender email & app password under <strong>Settings</strong> to start dispatching.
-          </span>
-          <button class="btn-sm btn-primary" id="noticeGoSettings">⚙ Configure Mail Settings</button>
         </div>
 
         <div class="outreach-summary" id="outreachSummary"></div>
@@ -593,20 +587,11 @@ function getFilteredBaseContacts() {
 }
 
 function renderAll() {
-  checkSetupNotice();
   renderDesks();
   renderSummaryCards();
   renderContacts();
   renderFilters();
   updateWebhooksUI();
-}
-
-function checkSetupNotice() {
-  const hasValidDesk = state.desks.some(d => d.senderEmail && (d.hasPassword || d.appPassword));
-  const notice = document.getElementById('setupNotice');
-  if (notice) {
-    notice.style.display = hasValidDesk ? 'none' : 'flex';
-  }
 }
 
 function updateWebhooksUI() {
@@ -840,8 +825,7 @@ async function sendSingleDirect(contactId) {
   }
 
   if (!desk.senderEmail || (!desk.hasPassword && !desk.appPassword)) {
-    showToast(`Desk "${desk.name}" needs Mail Credentials (Sender Email & App Password)`);
-    openDeskModal(desk.id);
+    showToast(`Please configure Sender Email & App Password for desk "${desk.name}" under Settings`);
     return;
   }
 
@@ -1224,8 +1208,19 @@ async function deleteTemplate(id) {
 // Event Listeners
 document.getElementById('addDeskBtn')?.addEventListener('click', () => openDeskModal());
 document.getElementById('openSettingsBtn')?.addEventListener('click', () => openSettingsModal());
-document.getElementById('noticeGoSettings')?.addEventListener('click', () => openSettingsModal());
 document.getElementById('openCreateCampaignBtn')?.addEventListener('click', () => openCampaignModal());
+document.getElementById('resetAllStatusBtn')?.addEventListener('click', async () => {
+  if (!confirm('Reset all contacts back to Pending (Not Sent)?')) return;
+  state.contacts.forEach(c => {
+    c.sentDate = null;
+    c.opened = false;
+    c.clicked = false;
+    c.replied = false;
+    c.bounced = false;
+  });
+  await saveState();
+  showToast('All contacts reset to Pending (Not Sent)');
+});
 document.getElementById('openContactQuoteBtn')?.addEventListener('click', () => {
   document.getElementById('contactQuoteBackdrop').classList.add('open');
 });
