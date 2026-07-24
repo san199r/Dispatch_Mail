@@ -115,6 +115,67 @@
   .pill-spam{background:var(--crimson-soft);color:var(--crimson);}
   .pill-bounced{background:var(--brick-soft);color:var(--brick);}
 
+  /* Filter Badges */
+  .filter-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 700;
+    background: rgba(15, 23, 42, 0.08);
+    color: var(--ink-soft);
+    line-height: 1;
+    margin-left: 4px;
+    transition: all .15s ease;
+  }
+  .btn-primary .filter-badge {
+    background: rgba(255, 255, 255, 0.25);
+    color: #FFFFFF;
+  }
+
+  /* Outreach Summary Strip */
+  .outreach-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .outreach-summary-card {
+    background: #F8FAFC;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+  }
+  .outreach-summary-card .lbl {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--ink-soft);
+    font-weight: 600;
+  }
+  .outreach-summary-card .num-row {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-top: 2px;
+  }
+  .outreach-summary-card .num {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .outreach-summary-card .sub {
+    font-size: 11px;
+    color: var(--ink-soft);
+  }
+
   /* Analytics Cards */
   .metrics-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:14px;margin-bottom:20px;}
   .metric-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:0 2px 6px rgba(0,0,0,0.02);}
@@ -219,6 +280,8 @@
           </span>
           <button class="btn-sm btn-primary" id="noticeGoSettings">⚙ Configure Mail Settings</button>
         </div>
+
+        <div class="outreach-summary" id="outreachSummary"></div>
 
         <div class="filter-row" id="filterRow" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;"></div>
 
@@ -513,8 +576,25 @@ async function saveState() {
   }
 }
 
+function getFilteredBaseContacts() {
+  let list = state.contacts || [];
+  if (activeDeskFilter) {
+    list = list.filter(c => c.accountId === activeDeskFilter);
+  }
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    list = list.filter(c => 
+      (c.name && c.name.toLowerCase().includes(q)) || 
+      (c.email && c.email.toLowerCase().includes(q)) || 
+      (c.market && c.market.toLowerCase().includes(q))
+    );
+  }
+  return list;
+}
+
 function renderAll() {
   renderDesks();
+  renderSummaryCards();
   renderContacts();
   renderFilters();
   updateWebhooksUI();
@@ -532,7 +612,12 @@ function renderDesks() {
   const container = document.getElementById('desksList');
   container.innerHTML = '';
 
-  state.desks.forEach((desk, idx) => {
+  state.desks.forEach((desk) => {
+    const deskContacts = state.contacts.filter(c => c.accountId === desk.id);
+    const assignedCount = deskContacts.length;
+    const sentCount = deskContacts.filter(c => c.sentDate).length;
+    const pct = assignedCount > 0 ? Math.round((sentCount / assignedCount) * 100) : 0;
+
     const el = document.createElement('div');
     el.className = `desk ${activeDeskFilter === desk.id ? 'active' : ''}`;
     el.innerHTML = `
@@ -544,6 +629,8 @@ function renderDesks() {
         </div>
       </div>
       <div class="desk-angle" onclick="filterByDesk('${desk.id}')">${desk.angle || 'No angle set'}</div>
+      <div class="desk-load">${assignedCount} contacts • ${sentCount} sent</div>
+      <div class="desk-bar"><div class="desk-bar-fill" style="width:${pct}%;"></div></div>
     `;
     container.appendChild(el);
   });
@@ -555,8 +642,84 @@ function filterByDesk(id) {
   renderAll();
 }
 
+function renderSummaryCards() {
+  const container = document.getElementById('outreachSummary');
+  if (!container) return;
+
+  const baseList = getFilteredBaseContacts();
+  const total = baseList.length;
+  const sent = baseList.filter(c => c.sentDate).length;
+  const pending = baseList.filter(c => !c.sentDate).length;
+  const opened = baseList.filter(c => c.opened).length;
+  const clicked = baseList.filter(c => c.clicked).length;
+  const replied = baseList.filter(c => c.replied).length;
+  const bounced = baseList.filter(c => c.bounced).length;
+
+  const sentPct = total > 0 ? Math.round((sent / total) * 100) : 0;
+  const openRate = sent > 0 ? Math.round((opened / sent) * 100) : 0;
+
+  container.innerHTML = `
+    <div class="outreach-summary-card">
+      <span class="lbl">Total Contacts</span>
+      <div class="num-row">
+        <span class="num">${total}</span>
+      </div>
+    </div>
+    <div class="outreach-summary-card">
+      <span class="lbl">Sent</span>
+      <div class="num-row">
+        <span class="num" style="color:var(--slate);">${sent}</span>
+        <span class="sub">(${sentPct}%)</span>
+      </div>
+    </div>
+    <div class="outreach-summary-card">
+      <span class="lbl">Not Sent</span>
+      <div class="num-row">
+        <span class="num" style="color:var(--amber);">${pending}</span>
+      </div>
+    </div>
+    <div class="outreach-summary-card">
+      <span class="lbl">Opened</span>
+      <div class="num-row">
+        <span class="num" style="color:var(--emerald);">${opened}</span>
+        <span class="sub">(${openRate}%)</span>
+      </div>
+    </div>
+    <div class="outreach-summary-card">
+      <span class="lbl">Clicked</span>
+      <div class="num-row">
+        <span class="num" style="color:var(--slate);">${clicked}</span>
+      </div>
+    </div>
+    <div class="outreach-summary-card">
+      <span class="lbl">Replied</span>
+      <div class="num-row">
+        <span class="num" style="color:var(--violet);">${replied}</span>
+      </div>
+    </div>
+    <div class="outreach-summary-card">
+      <span class="lbl">Bounced</span>
+      <div class="num-row">
+        <span class="num" style="color:var(--brick);">${bounced}</span>
+      </div>
+    </div>
+  `;
+}
+
 function renderFilters() {
   const container = document.getElementById('filterRow');
+  const baseList = getFilteredBaseContacts();
+
+  const counts = {
+    all: baseList.length,
+    pending: baseList.filter(c => !c.sentDate).length,
+    sent: baseList.filter(c => c.sentDate).length,
+    opened: baseList.filter(c => c.opened).length,
+    clicked: baseList.filter(c => c.clicked).length,
+    replied: baseList.filter(c => c.replied).length,
+    bounced: baseList.filter(c => c.bounced).length
+  };
+
   const filters = [
     { key: 'all', label: 'All' },
     { key: 'pending', label: 'Not Sent' },
@@ -567,9 +730,16 @@ function renderFilters() {
     { key: 'bounced', label: 'Bounced' }
   ];
 
-  container.innerHTML = filters.map(f => `
-    <button class="btn-sm ${currentFilter === f.key ? 'btn-primary' : 'btn-ghost'}" onclick="setFilter('${f.key}')">${f.label}</button>
-  `).join('');
+  container.innerHTML = filters.map(f => {
+    const isActive = currentFilter === f.key;
+    const count = counts[f.key] || 0;
+    return `
+      <button class="btn-sm ${isActive ? 'btn-primary' : 'btn-ghost'}" onclick="setFilter('${f.key}')" style="display:inline-flex;align-items:center;gap:4px;">
+        <span>${f.label}</span>
+        <span class="filter-badge">${count}</span>
+      </button>
+    `;
+  }).join('');
 }
 
 function setFilter(k) {
@@ -922,6 +1092,8 @@ document.getElementById('parseAddContacts').addEventListener('click', async () =
 document.getElementById('searchBox').addEventListener('input', (e) => {
   searchQuery = e.target.value;
   renderContacts();
+  renderFilters();
+  renderSummaryCards();
 });
 
 // Auto Poll for background queue progress every 3s
