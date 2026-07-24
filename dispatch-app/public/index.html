@@ -887,17 +887,17 @@ function openDeskModal(deskId = null) {
 }
 
 async function testSmtpConnection(existingId) {
-  const senderEmail = document.getElementById('dmSenderEmail').value.trim();
-  const appPassword = document.getElementById('dmAppPassword').value.trim();
+  const senderEmail = (document.getElementById('dmSenderEmail')?.value || '').trim();
+  const appPassword = (document.getElementById('dmAppPassword')?.value || '').trim();
   const desk = existingId ? state.desks.find(d => d.id === existingId) : null;
   const passwordToUse = appPassword || (desk ? desk.appPassword : '');
 
-  if (!senderEmail || !passwordToUse) {
-    showToast('Please enter both Sender Email and App Password to test');
+  if (!senderEmail) {
+    showToast('Please enter your Sender Email address');
     return;
   }
 
-  showToast('Testing SMTP connection to Gmail...');
+  showToast('Testing SMTP connection...');
   try {
     const res = await fetch('/api/test-smtp', {
       method: 'POST',
@@ -906,12 +906,12 @@ async function testSmtpConnection(existingId) {
     });
     const data = await res.json();
     if (data.ok) {
-      showToast('✅ SMTP Connection Successful! Credentials are valid.');
+      showToast('✅ SMTP Connection Successful! Credentials verified.');
     } else {
-      showToast(`❌ SMTP Error: ${data.error}`);
+      showToast(`❌ ${data.error || 'SMTP Connection Error'}`);
     }
   } catch (e) {
-    showToast('❌ Failed to test SMTP connection');
+    showToast('❌ Connection check failed');
   }
 }
 
@@ -920,15 +920,15 @@ function closeDeskModal() {
 }
 
 async function saveDeskModal(existingId) {
-  const name = document.getElementById('dmName').value.trim();
-  const angle = document.getElementById('dmAngle').value.trim();
-  const subject = document.getElementById('dmSubject').value.trim();
-  const body = document.getElementById('dmBody').value.trim();
-  const senderEmail = document.getElementById('dmSenderEmail').value.trim();
-  const appPassword = document.getElementById('dmAppPassword').value.trim();
+  const name = (document.getElementById('dmName')?.value || '').trim() || 'Main Desk';
+  const angle = (document.getElementById('dmAngle')?.value || '').trim();
+  const subject = (document.getElementById('dmSubject')?.value || '').trim() || 'Outreach';
+  const body = (document.getElementById('dmBody')?.value || '').trim();
+  const senderEmail = (document.getElementById('dmSenderEmail')?.value || '').trim();
+  const appPassword = (document.getElementById('dmAppPassword')?.value || '').trim();
 
-  if (!name || !senderEmail) {
-    showToast('Please enter both Desk Name and Sender Email');
+  if (!senderEmail) {
+    showToast('Please enter your Sender Email address');
     return;
   }
 
@@ -957,7 +957,7 @@ async function saveDeskModal(existingId) {
 
   closeDeskModal();
   await saveState();
-  showToast('Desk credentials saved successfully!');
+  showToast('✅ Desk credentials saved successfully!');
 }
 
 function editDesk(id) {
