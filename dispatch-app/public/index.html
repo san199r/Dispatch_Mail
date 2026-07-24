@@ -1627,17 +1627,21 @@ function scheduleNextRun(){
 
   if(countdownTimer) clearInterval(countdownTimer);
   countdownTimer = setInterval(() => {
+    if(!schedulerEnabled){ clearInterval(countdownTimer); return; }
     nextRunSeconds--;
-    if(nextRunSeconds <= 0){
-      clearInterval(countdownTimer);
-    }
+    if(nextRunSeconds < 0) nextRunSeconds = 0;
     updateSchedulerUI();
   }, 1000);
 
   if(schedulerTimer) clearTimeout(schedulerTimer);
   schedulerTimer = setTimeout(async () => {
-    await executeScheduledSend();
-    if(schedulerEnabled) scheduleNextRun();
+    try {
+      await executeScheduledSend();
+    } catch(err) {
+      console.error('Scheduled send error:', err);
+    } finally {
+      if(schedulerEnabled) scheduleNextRun();
+    }
   }, delaySec * 1000);
 }
 
@@ -1660,7 +1664,12 @@ async function executeScheduledSend(){
   });
 
   if(!candidate){
-    toast('Scheduler check: No pending contacts ready with valid mail credentials.');
+    const invalidDesk = state.desks.find(d => !d.hasPassword || !d.senderEmail);
+    if(invalidDesk){
+      toast(`⚠️ Desk "${invalidDesk.name}" needs a 16-character App Password under Settings to send.`);
+    } else {
+      toast('Scheduler check: No pending contacts ready for outreach.');
+    }
     return;
   }
 
