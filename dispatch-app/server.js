@@ -235,8 +235,8 @@ async function sendEmail({ deskId, to, subject, body, contactId, enableTracking,
 
   // Appending http://localhost tracking pixels can trigger Gmail spam filters on personal accounts.
   // Only embed the tracking pixel if enableTracking is explicitly requested.
-  if (contactId && enableTracking === true) {
-    const host = trackingBaseUrl || reqHost || `http://${getLocalIp()}:${PORT}`;
+  if (contactId && enableTracking !== false) {
+    const host = trackingBaseUrl || process.env.RENDER_EXTERNAL_URL || reqHost || `http://${getLocalIp()}:${PORT}`;
     const trackingUrl = `${host.replace(/\/$/, '')}/api/track-open/${encodeURIComponent(contactId)}`;
     htmlBody += `<br><br><img src="${trackingUrl}" width="1" height="1" style="display:none;" alt="" />`;
   }
