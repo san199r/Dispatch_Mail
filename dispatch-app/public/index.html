@@ -3,1862 +3,936 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dispatch Board</title>
+<title>Dispatch Board — Email Campaign & Analytics Platform</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✉️</text></svg>">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#EEF2F0;
+    --bg:#EFF3F1;
     --surface:#FFFFFF;
-    --ink:#14201C;
-    --ink-soft:#5B6864;
-    --line:#D8DED9;
-    --primary:#3B6E62;
-    --primary-soft:#E4EDE9;
-    --amber:#B9812C;
-    --amber-soft:#F7ECD8;
-    --brick:#A6432F;
-    --brick-soft:#F6E3DE;
-    --slate:#4A6FA5;
-    --slate-soft:#E5EBF4;
-    --violet:#6A4EA0;
-    --violet-soft:#E9E4F5;
-    --emerald:#059669;
+    --ink:#0F172A;
+    --ink-soft:#64748B;
+    --line:#E2E8F0;
+    --primary:#0D9488;
+    --primary-soft:#CCFBF1;
+    --primary-dark:#0F766E;
+    --amber:#D97706;
+    --amber-soft:#FEF3C7;
+    --brick:#DC2626;
+    --brick-soft:#FEE2E2;
+    --slate:#3B82F6;
+    --slate-soft:#DBEAFE;
+    --violet:#7C3AED;
+    --violet-soft:#EDE9FE;
+    --emerald:#10B981;
     --emerald-soft:#D1FAE5;
-    --crimson:#DC2626;
-    --crimson-soft:#FEE2E2;
-    --radius:10px;
+    --crimson:#E11D48;
+    --crimson-soft:#FFE4E6;
+    --radius:12px;
   }
   *{box-sizing:border-box;}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;font-size:14px;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;font-size:14px;line-height:1.5;}
   .mono{font-family:'IBM Plex Mono',monospace;}
-  h1,h2,h3{font-family:'Space Grotesk',sans-serif;margin:0;}
-  button{font-family:'Inter',sans-serif;cursor:pointer;border:none;border-radius:8px;font-weight:600;}
-  input,select,textarea{font-family:'Inter',sans-serif;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--surface);color:var(--ink);}
+  h1,h2,h3,h4{font-family:'Space Grotesk',sans-serif;margin:0;}
+  button{font-family:'Inter',sans-serif;cursor:pointer;border:none;border-radius:8px;font-weight:600;transition:all .15s ease;}
+  input,select,textarea{font-family:'Inter',sans-serif;border:1px solid var(--line);border-radius:8px;padding:9px 12px;background:var(--surface);color:var(--ink);font-size:13px;outline:none;}
+  input:focus,select:focus,textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(13,148,136,0.12);}
 
-  .app{max-width:1440px;margin:0 auto;padding:22px 24px 60px;}
+  .app{max-width:1440px;margin:0 auto;padding:20px 24px 60px;}
 
-  .topbar{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:20px;flex-wrap:wrap;gap:14px;}
+  /* Top Navigation & Header */
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:14px;background:var(--surface);padding:14px 20px;border-radius:var(--radius);border:1px solid var(--line);box-shadow:0 2px 6px rgba(0,0,0,0.02);}
   .brand{display:flex;align-items:center;gap:12px;}
-  .brand-mark{width:38px;height:38px;border-radius:99px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk';font-weight:700;font-size:18px;flex-shrink:0;}
-  .brand h1{font-size:21px;letter-spacing:-0.01em;}
-  .brand .tag{margin:2px 0 0;color:var(--ink-soft);font-size:13px;}
+  .brand-mark{width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg, var(--primary), var(--primary-dark));color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk';font-weight:700;font-size:20px;flex-shrink:0;box-shadow:0 4px 10px rgba(13,148,136,0.25);}
+  .brand h1{font-size:20px;letter-spacing:-0.01em;color:var(--ink);}
+  .brand .tag{margin:1px 0 0;color:var(--ink-soft);font-size:12.5px;}
 
-  .stats{display:flex;gap:10px;flex-wrap:wrap;}
-  .stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:8px 14px;min-width:74px;text-align:center;transition:box-shadow .15s, transform .15s;}
-  .stat.clickable{cursor:pointer;}
-  .stat.clickable:hover{transform:translateY(-1px);box-shadow:0 3px 10px rgba(20,32,28,0.08);}
-  .stat.active{outline:2px solid var(--primary);}
-  .stat .n{font-family:'Space Grotesk';font-size:18px;font-weight:700;}
-  .stat .l{font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;}
-  .stat.due .n{color:var(--brick);}
-  .stat.sent .n{color:var(--primary);}
-  .stat.pending .n{color:var(--amber);}
-  .stat.replied .n{color:var(--violet);}
-  .stat.opened .n{color:var(--emerald);}
-  .stat.spam .n{color:var(--crimson);}
+  .nav-tabs{display:flex;gap:6px;background:var(--bg);padding:4px;border-radius:10px;border:1px solid var(--line);}
+  .nav-tab{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;color:var(--ink-soft);background:transparent;cursor:pointer;}
+  .nav-tab.active{background:var(--surface);color:var(--primary-dark);box-shadow:0 2px 6px rgba(0,0,0,0.06);}
+  .nav-tab:hover:not(.active){color:var(--ink);}
 
-  .layout{display:grid;grid-template-columns:260px 1fr;gap:18px;align-items:start;}
-  @media (max-width:960px){.layout{grid-template-columns:1fr;}}
+  .top-actions{display:flex;align-items:center;gap:10px;}
 
-  .desks{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px;}
-  .desks-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  /* Tab View Visibility */
+  .tab-view{display:none;}
+  .tab-view.active{display:block;}
+
+  /* Layout */
+  .layout{display:grid;grid-template-columns:270px 1fr;gap:18px;align-items:start;}
+  @media (max-width:980px){.layout{grid-template-columns:1fr;}}
+
+  /* Desks Sidebar */
+  .desks{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px;}
+  .desks-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
   .desks h3{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);}
-  .desk{border:1px solid var(--line);border-radius:8px;padding:9px 10px;margin-bottom:8px;transition:border-color .15s, background .15s;}
+  .desk{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px;transition:border-color .15s, background .15s;}
   .desk.active{border-color:var(--primary);background:var(--primary-soft);}
-  .desk:last-child{margin-bottom:0;}
-  .desk-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;gap:6px;}
-  .desk-name{font-weight:600;font-size:13px;cursor:pointer;flex:1;}
+  .desk-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;gap:6px;}
+  .desk-name{font-weight:600;font-size:13.5px;cursor:pointer;flex:1;}
   .desk-icons{display:flex;gap:4px;flex-shrink:0;}
-  .icon-btn{background:transparent;border:none;color:var(--ink-soft);padding:2px 4px;font-size:12px;border-radius:4px;}
+  .icon-btn{background:transparent;border:none;color:var(--ink-soft);padding:3px 5px;font-size:12px;border-radius:4px;}
   .icon-btn:hover{background:var(--bg);color:var(--ink);}
-  .desk-angle{font-size:11px;color:var(--ink-soft);margin-bottom:6px;cursor:pointer;}
-  .desk-load{font-size:11px;color:var(--ink-soft);}
-  .desk-bar{height:5px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:5px;}
+  .desk-angle{font-size:11.5px;color:var(--ink-soft);margin-bottom:6px;cursor:pointer;}
+  .desk-load{font-size:11.5px;color:var(--ink-soft);}
+  .desk-bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:6px;}
   .desk-bar-fill{height:100%;background:var(--primary);}
-  .desk-cap-warn{color:var(--brick);font-weight:600;}
-  .add-desk-btn{width:100%;margin-top:6px;}
-  .clear-filter{margin-top:8px;width:100%;}
-  .rules-btn{width:100%;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);}
 
-  .board{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px;min-height:400px;}
-  .board-controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center;}
-  .board-controls input{flex:1;min-width:160px;}
-  .btn-primary{background:var(--primary);color:#fff;padding:9px 14px;font-size:13px;}
-  .btn-primary:hover{background:#2f584e;}
-  .btn-ghost{background:var(--primary-soft);color:var(--primary);padding:9px 14px;font-size:13px;}
-  .btn-ghost:hover{background:#d6e4de;}
-  .btn-warn{background:var(--brick-soft);color:var(--brick);padding:9px 14px;font-size:13px;}
-  .btn-warn:hover{background:#f0d3cb;}
-  .btn-danger{background:var(--brick);color:#fff;padding:9px 14px;font-size:13px;}
-  .btn-danger:hover{background:#8c3626;}
-  .btn-sm{padding:5px 10px;font-size:12px;border-radius:6px;}
+  /* Main Boards */
+  .board{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;min-height:500px;}
+  .board-controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;align-items:center;}
+  .board-controls input{flex:1;min-width:180px;}
 
-  .scheduler-badge{display:inline-flex;align-items:center;gap:6px;background:var(--emerald-soft);border:1px solid #A7F3D0;color:var(--emerald);padding:6px 12px;border-radius:999px;font-size:12px;font-weight:600;}
-  .scheduler-badge.disabled{background:var(--bg);border-color:var(--line);color:var(--ink-soft);}
+  /* Buttons */
+  .btn-primary{background:var(--primary);color:#fff;padding:9px 16px;font-size:13px;}
+  .btn-primary:hover{background:var(--primary-dark);}
+  .btn-ghost{background:var(--primary-soft);color:var(--primary-dark);padding:9px 16px;font-size:13px;}
+  .btn-ghost:hover{background:#B2F5EA;}
+  .btn-warn{background:var(--amber-soft);color:var(--amber);padding:9px 16px;font-size:13px;}
+  .btn-warn:hover{background:#FDE68A;}
+  .btn-danger{background:var(--brick);color:#fff;padding:9px 16px;font-size:13px;}
+  .btn-danger:hover{background:#B91C1C;}
+  .btn-sm{padding:6px 12px;font-size:12px;border-radius:6px;}
 
-  .filter-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
-  .chip{padding:5px 11px;border-radius:999px;font-size:12px;font-weight:600;background:var(--bg);color:var(--ink-soft);border:1px solid var(--line);}
-  .chip.active{background:var(--ink);color:#fff;border-color:var(--ink);}
-
+  /* Ledger Table */
   table.ledger{width:100%;border-collapse:collapse;}
-  .ledger thead th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);padding:8px 10px;border-bottom:1px solid var(--line);}
-  .ledger tbody td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:middle;font-size:13px;}
-  .ledger tbody tr:hover{background:#FAFBFA;cursor:pointer;}
+  .ledger thead th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);padding:10px 12px;border-bottom:1px solid var(--line);background:#F8FAFC;}
+  .ledger tbody td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:middle;font-size:13px;}
+  .ledger tbody tr:hover{background:#F8FAFC;cursor:pointer;}
   .name-cell .em{display:block;color:var(--ink-soft);font-size:11.5px;}
-  .pill{display:inline-block;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:600;white-space:nowrap;}
+
+  /* Status Pills */
+  .pill{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600;white-space:nowrap;}
   .pill-pending{background:var(--amber-soft);color:var(--amber);}
   .pill-sent{background:var(--slate-soft);color:var(--slate);}
   .pill-due{background:var(--brick-soft);color:var(--brick);}
-  .pill-done{background:var(--primary-soft);color:var(--primary);}
+  .pill-done{background:var(--primary-soft);color:var(--primary-dark);}
   .pill-replied{background:var(--violet-soft);color:var(--violet);}
   .pill-opened{background:var(--emerald-soft);color:var(--emerald);}
+  .pill-clicked{background:var(--slate-soft);color:var(--slate);}
   .pill-unopened{background:var(--bg);color:var(--ink-soft);}
   .pill-spam{background:var(--crimson-soft);color:var(--crimson);}
-  .acct-tag{font-size:11.5px;color:var(--ink-soft);}
-  .empty{text-align:center;padding:50px 20px;color:var(--ink-soft);}
-  .empty h3{margin-bottom:6px;color:var(--ink);}
+  .pill-bounced{background:var(--brick-soft);color:var(--brick);}
 
-  .modal-backdrop{position:fixed;inset:0;background:rgba(15,20,18,0.45);display:none;align-items:center;justify-content:center;z-index:50;padding:20px;}
+  /* Analytics Cards */
+  .metrics-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:14px;margin-bottom:20px;}
+  .metric-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:0 2px 6px rgba(0,0,0,0.02);}
+  .metric-card .title{font-size:12px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-bottom:6px;}
+  .metric-card .value{font-family:'Space Grotesk';font-size:26px;font-weight:700;color:var(--ink);}
+  .metric-card .sub{font-size:11.5px;color:var(--ink-soft);margin-top:4px;}
+
+  /* Campaign Progress Header Banner */
+  .active-campaign-banner{background:linear-gradient(135deg, #0F172A, #1E293B);color:#fff;border-radius:var(--radius);padding:20px;margin-bottom:20px;box-shadow:0 4px 14px rgba(15,23,42,0.15);}
+  .ac-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;}
+  .ac-title{font-size:18px;font-weight:700;color:#fff;}
+  .ac-status{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:700;text-transform:uppercase;}
+  .ac-status.sending{background:#0D9488;color:#fff;}
+  .ac-status.queued{background:#D97706;color:#fff;}
+  .ac-status.completed{background:#10B981;color:#fff;}
+  .ac-status.paused{background:#64748B;color:#fff;}
+
+  .progress-container{background:rgba(255,255,255,0.1);border-radius:8px;height:12px;overflow:hidden;margin:12px 0;}
+  .progress-fill{height:100%;background:linear-gradient(90deg, #10B981, #0D9488);width:0%;transition:width .4s ease;}
+  .ac-stats-row{display:flex;gap:20px;flex-wrap:wrap;font-size:13px;color:#94A3B8;margin-top:10px;}
+  .ac-stats-row strong{color:#F8FAFC;}
+
+  /* Activity Timeline */
+  .timeline{border-left:2px solid var(--line);padding-left:18px;margin:16px 0;}
+  .timeline-item{position:relative;margin-bottom:16px;}
+  .timeline-item::before{content:'';position:absolute;left:-24px;top:4px;width:10px;height:10px;border-radius:50%;background:var(--primary);}
+  .timeline-item.opened::before{background:var(--emerald);}
+  .timeline-item.clicked::before{background:var(--slate);}
+  .timeline-item.replied::before{background:var(--violet);}
+  .timeline-item.failed::before{background:var(--brick);}
+  .timeline-time{font-size:11px;color:var(--ink-soft);font-family:'IBM Plex Mono';}
+  .timeline-text{font-size:13px;font-weight:500;margin-top:2px;}
+
+  /* Modals */
+  .modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,0.5);display:none;align-items:center;justify-content:center;z-index:100;padding:20px;}
   .modal-backdrop.open{display:flex;}
-  .modal{background:var(--surface);border-radius:14px;max-width:680px;width:100%;max-height:88vh;overflow-y:auto;padding:22px;}
-  .modal h2{font-size:17px;margin-bottom:4px;}
-  .modal .sub{font-size:12px;color:var(--ink-soft);margin-bottom:14px;}
-  .modal label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);margin:12px 0 4px;}
+  .modal{background:var(--surface);border-radius:16px;max-width:680px;width:100%;max-height:90vh;overflow-y:auto;padding:24px;box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);}
+  .modal h2{font-size:18px;margin-bottom:4px;color:var(--ink);}
+  .modal .sub{font-size:12.5px;color:var(--ink-soft);margin-bottom:16px;}
+  .modal label{display:block;font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);margin:14px 0 4px;font-weight:600;}
   .modal input,.modal select,.modal textarea{width:100%;}
-  .modal textarea{min-height:70px;resize:vertical;}
-  .email-preview{background:#FAFAF8;border:1px solid var(--line);border-radius:8px;padding:12px;font-size:13px;line-height:1.55;white-space:pre-wrap;margin-top:6px;max-height:280px;overflow-y:auto;}
-  .email-subject{font-weight:600;margin-bottom:8px;padding-bottom:8px;border-bottom:1px dashed var(--line);}
-  .modal-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}
-  .modal-close{position:absolute;top:16px;right:18px;}
+  .modal textarea{min-height:80px;resize:vertical;}
+  .modal-actions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;}
+  .modal-close{position:absolute;top:18px;right:20px;}
   .modal-wrap{position:relative;}
-  .stage-note{font-size:12px;color:var(--ink-soft);background:var(--amber-soft);border-radius:8px;padding:8px 10px;margin-top:10px;}
-  .status-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
-  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;z-index:100;opacity:0;transition:opacity .2s;pointer-events:none;}
+
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 22px;border-radius:10px;font-size:13.5px;font-weight:500;z-index:200;opacity:0;transition:opacity .2s ease;pointer-events:none;box-shadow:0 10px 15px -3px rgba(0,0,0,0.2);}
   .toast.show{opacity:1;}
-  .field-row{display:flex;gap:8px;}
-  .field-row > div{flex:1;}
-  .followup-block{border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px;}
-  .followup-block h4{font-size:13px;margin-bottom:2px;}
-  .followup-block .day-row{display:flex;align-items:center;gap:8px;margin:8px 0;}
-  .followup-block .day-row input{width:70px;}
-  .hint{font-size:11px;color:var(--ink-soft);margin-top:4px;}
-
-  .template-card{border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px;background:var(--surface);transition:border-color .15s, box-shadow .15s;}
-  .template-card:hover{border-color:var(--primary);box-shadow:0 2px 8px rgba(0,0,0,0.04);}
-  .template-card-title{font-weight:700;font-size:14px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;}
-  .template-card-subject{font-size:12px;color:var(--primary);margin-bottom:6px;font-weight:600;}
-  .template-card-body{font-size:12px;color:var(--ink-soft);max-height:60px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;}
-
-  .tip-box{background:#F0F9FF;border:1px solid #BAE6FD;color:#0369A1;padding:12px;border-radius:10px;margin:12px 0;font-size:12px;line-height:1.5;}
-  .quota-row{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg);border-radius:8px;margin-bottom:8px;}
-  .quota-row input{width:90px;font-weight:600;}
-
-  .template-tab-bar{display:flex;gap:6px;margin:12px 0 10px;border-bottom:1px solid var(--line);padding-bottom:8px;}
-  .template-tab{padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;background:var(--bg);color:var(--ink-soft);cursor:pointer;}
-  .template-tab.active{background:var(--primary);color:#fff;}
 </style>
 </head>
 <body>
 <div class="app">
+  <!-- Header / Topbar -->
   <div class="topbar">
     <div class="brand">
       <div class="brand-mark">◈</div>
       <div>
         <h1>Dispatch Board</h1>
-        <p class="tag">RealSupermarket outreach — local desktop edition</p>
+        <p class="tag">Professional Email Campaign & Outreach Platform</p>
       </div>
     </div>
-    <div style="display:flex;align-items:center;gap:10px;">
-      <button class="btn-ghost" id="openSettingsBtn" style="display:flex;align-items:center;gap:6px;padding:8px 14px;"><span style="font-size:15px;">⚙</span> Settings</button>
-      <div class="stats" id="stats"></div>
+
+    <!-- Central View Nav Tabs -->
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="switchTab('outreach')">📌 Outreach Board</button>
+      <button class="nav-tab" onclick="switchTab('campaigns')">🚀 Campaigns & Queue</button>
+      <button class="nav-tab" onclick="switchTab('analytics')">📊 Analytics & Live Feed</button>
+      <button class="nav-tab" onclick="switchTab('templates')">📝 Templates & Webhooks</button>
+    </div>
+
+    <div class="top-actions">
+      <button class="btn-ghost" id="openSettingsBtn">⚙ Settings</button>
     </div>
   </div>
 
-  <div class="layout">
-    <aside class="desks">
-      <div class="desks-head">
-        <h3>Sending desks</h3>
-      </div>
-      <div id="desksList"></div>
-      <button class="btn-sm btn-primary add-desk-btn" id="addDeskBtn">+ Add desk</button>
-      <button class="btn-sm btn-ghost clear-filter" id="clearDeskFilter" style="display:none;">Clear desk filter</button>
-      <button class="btn-sm btn-ghost rules-btn" id="openFollowupRules">⚙ Auto Follow-up Rules</button>
-    </aside>
+  <!-- TAB 1: OUTREACH BOARD -->
+  <div class="tab-view active" id="view-outreach">
+    <div class="layout">
+      <aside class="desks">
+        <div class="desks-head">
+          <h3>Sending Desks</h3>
+        </div>
+        <div id="desksList"></div>
+        <button class="btn-sm btn-primary" id="addDeskBtn" style="width:100%;margin-top:10px;">+ Add Desk</button>
+        <button class="btn-sm btn-ghost" id="clearDeskFilter" style="display:none;width:100%;margin-top:8px;">Clear Filter</button>
+        <button class="btn-sm btn-ghost" id="openFollowupRules" style="width:100%;margin-top:12px;border-top:1px dashed var(--line);padding-top:10px;">⚙ Auto Follow-up Rules</button>
+      </aside>
 
-    <main class="board">
-      <div class="board-controls">
-        <button class="btn-primary" id="openAddModal">+ Add contacts</button>
-        <button class="btn-ghost" id="autoAssignBtn">⚡ Auto-assign (by Count & 4 Templates)</button>
-        <button class="btn-ghost" id="openTemplatesBtn">✉ Email Templates</button>
-        <button class="btn-ghost" id="openSchedulerBtn">⏰ Schedule Emails</button>
-        <button class="btn-ghost" id="openContactQuoteBtn" style="background:#EEF2FF;color:#4F46E5;border:1px solid #C7D2FE;">📋 Contact Form (Get Quote)</button>
-        <button class="btn-warn" id="sendAllDueBtn" style="display:none;">Send all due follow-ups</button>
-        <span id="schedulerBadge" class="scheduler-badge disabled">⏰ Scheduler OFF</span>
-        <input id="searchBox" placeholder="Search name, email, market…">
-        <button class="btn-sm btn-ghost" id="exportCsvBtn">Export CSV</button>
+      <main class="board">
+        <div class="board-controls">
+          <button class="btn-primary" id="openAddModal">+ Add Contacts</button>
+          <button class="btn-ghost" id="autoAssignBtn">⚡ Auto-Assign Desks</button>
+          <button class="btn-ghost" id="openCreateCampaignBtn" style="background:var(--emerald-soft);color:var(--emerald);border:1px solid #A7F3D0;">🚀 New Campaign</button>
+          <button class="btn-ghost" id="openContactQuoteBtn" style="background:#EEF2FF;color:#4F46E5;border:1px solid #C7D2FE;">📋 Custom Quote Form</button>
+          <input id="searchBox" placeholder="Search contact name, email, market…">
+          <button class="btn-sm btn-ghost" id="exportCsvBtn">Export CSV</button>
+        </div>
+
+        <div id="setupNotice" style="display:none;background:var(--amber-soft);border:1px solid #FCD34D;border-radius:10px;padding:12px 16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:13px;color:var(--amber);font-weight:500;">
+            💡 <strong>Mail Credentials Required:</strong> Add your sender email & app password under <strong>Settings</strong> to start dispatching.
+          </span>
+          <button class="btn-sm btn-primary" id="noticeGoSettings">⚙ Configure Mail Settings</button>
+        </div>
+
+        <div class="filter-row" id="filterRow" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;"></div>
+
+        <table class="ledger">
+          <thead>
+            <tr>
+              <th>Contact</th>
+              <th>Market</th>
+              <th>Desk & Subject</th>
+              <th>Status</th>
+              <th>Opened / Clicked</th>
+              <th>Sent Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="ledgerBody"></tbody>
+        </table>
+        <div class="empty" id="emptyState" style="display:none;text-align:center;padding:40px;color:var(--ink-soft);">
+          <h3>No contacts found</h3>
+          <p>Add contacts to get started with your outreach.</p>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- TAB 2: CAMPAIGNS & QUEUE -->
+  <div class="tab-view" id="view-campaigns">
+    <!-- Active Campaign Live Banner -->
+    <div id="activeCampaignBanner" class="active-campaign-banner" style="display:none;">
+      <div class="ac-top">
+        <div>
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#94A3B8;">Active Sending Queue</div>
+          <div class="ac-title" id="acName">Spring Outreach Campaign</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="ac-status" id="acStatus">SENDING</span>
+          <button class="btn-sm" id="pauseCampaignBtn" style="background:rgba(255,255,255,0.2);color:#fff;">⏸ Pause</button>
+          <button class="btn-sm" id="resumeCampaignBtn" style="background:#10B981;color:#fff;display:none;">▶ Resume</button>
+        </div>
       </div>
 
-      <div id="setupNotice" style="display:none;background:var(--amber-soft);border:1px solid #FCD34D;border-radius:10px;padding:12px 16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;">
-        <span style="font-size:13px;color:var(--amber);font-weight:500;">
-          💡 <strong>Contacts added!</strong> Add your Gmail address and 16-character App Password under <strong>Settings</strong> to enable scheduled auto-sending.
-        </span>
-        <button class="btn-sm btn-primary" id="noticeGoSettings">⚙ Configure Mail Settings</button>
+      <div class="progress-container">
+        <div class="progress-fill" id="acProgressFill"></div>
       </div>
 
-      <div class="filter-row" id="filterRow"></div>
-      <table class="ledger" id="ledgerTable">
+      <div class="ac-stats-row">
+        <div>Progress: <strong id="acProgressText">0 / 0</strong></div>
+        <div>Sent: <strong id="acSentCount">0</strong></div>
+        <div>Opened: <strong id="acOpenedCount">0</strong></div>
+        <div>Clicked: <strong id="acClickedCount">0</strong></div>
+        <div>Errors: <strong id="acErrorCount">0</strong></div>
+      </div>
+    </div>
+
+    <div class="board">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h2>Email Campaigns</h2>
+        <button class="btn-primary" onclick="openCampaignModal()">+ Create New Campaign</button>
+      </div>
+
+      <table class="ledger">
         <thead>
           <tr>
-            <th>Contact</th>
-            <th>Market</th>
-            <th>Desk & Template</th>
+            <th>Campaign Name</th>
             <th>Status</th>
-            <th>Opened</th>
-            <th>Last touch</th>
-            <th></th>
+            <th>Recipients</th>
+            <th>Sent / Delivered</th>
+            <th>Opens</th>
+            <th>Clicks</th>
+            <th>Created At</th>
+            <th>Actions</th>
           </tr>
         </thead>
-        <tbody id="ledgerBody"></tbody>
+        <tbody id="campaignsTableBody"></tbody>
       </table>
-      <div class="empty" id="emptyState" style="display:none;">
-        <h3>No contacts match</h3>
-        <p>Try clearing your filters, or add contacts to get started.</p>
+    </div>
+  </div>
+
+  <!-- TAB 3: ANALYTICS & LIVE FEED -->
+  <div class="tab-view" id="view-analytics">
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="title">Total Campaigns</div>
+        <div class="value" id="mTotalCampaigns">0</div>
+        <div class="sub">Dispatched</div>
       </div>
-    </main>
+      <div class="metric-card">
+        <div class="title">Emails Sent</div>
+        <div class="value" id="mTotalSent">0</div>
+        <div class="sub">Delivered via SMTP</div>
+      </div>
+      <div class="metric-card">
+        <div class="title">Open Rate</div>
+        <div class="value" id="mOpenRate" style="color:var(--emerald);">0%</div>
+        <div class="sub" id="mTotalOpens">0 total opens</div>
+      </div>
+      <div class="metric-card">
+        <div class="title">Click-Through Rate</div>
+        <div class="value" id="mCtr" style="color:var(--slate);">0%</div>
+        <div class="sub" id="mTotalClicks">0 total clicks</div>
+      </div>
+      <div class="metric-card">
+        <div class="title">Replies</div>
+        <div class="value" id="mReplied" style="color:var(--violet);">0</div>
+        <div class="sub">Responses logged</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+      <div class="board">
+        <h3>⚡ Real-Time Activity Feed</h3>
+        <div class="timeline" id="timelineFeed"></div>
+      </div>
+
+      <div class="board">
+        <h3>🔍 Multi-Open & Click Log</h3>
+        <div id="opensLog" style="max-height:400px;overflow-y:auto;margin-top:12px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 4: TEMPLATES & WEBHOOKS -->
+  <div class="tab-view" id="view-templates">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+      <div class="board">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <h3>Email Templates</h3>
+          <button class="btn-sm btn-primary" onclick="openNewTemplateDialog()">+ New Template</button>
+        </div>
+        <div id="templatesList"></div>
+      </div>
+
+      <div class="board">
+        <h3>🔗 Delivery, Bounce & Spam Webhooks</h3>
+        <p style="font-size:12.5px;color:var(--ink-soft);margin-bottom:14px;">
+          Configure your email service provider (SendGrid, Amazon SES, Mailgun, Postmark) to send HTTP POST webhooks to these endpoints for automatic delivery, bounce, and spam tracking.
+        </p>
+
+        <div style="background:#F8FAFC;border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px;">
+          <label style="font-size:11px;font-weight:700;color:var(--primary);text-transform:uppercase;">Generic / Custom Webhook URL</label>
+          <input readonly id="whGenericUrl" style="font-family:'IBM Plex Mono';font-size:12px;margin-top:4px;" value="">
+        </div>
+
+        <div style="background:#F8FAFC;border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px;">
+          <label style="font-size:11px;font-weight:700;color:var(--primary);text-transform:uppercase;">SendGrid Event Webhook</label>
+          <input readonly id="whSendgridUrl" style="font-family:'IBM Plex Mono';font-size:12px;margin-top:4px;" value="">
+        </div>
+
+        <div style="background:#F8FAFC;border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px;">
+          <label style="font-size:11px;font-weight:700;color:var(--primary);text-transform:uppercase;">Amazon SES / SNS Webhook</label>
+          <input readonly id="whSesUrl" style="font-family:'IBM Plex Mono';font-size:12px;margin-top:4px;" value="">
+        </div>
+
+        <div style="background:#F8FAFC;border:1px solid var(--line);border-radius:10px;padding:14px;">
+          <label style="font-size:11px;font-weight:700;color:var(--primary);text-transform:uppercase;">Mailgun / Postmark Webhook</label>
+          <input readonly id="whMailgunUrl" style="font-family:'IBM Plex Mono';font-size:12px;margin-top:4px;" value="">
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- Auto-assign Quota Modal -->
-<div class="modal-backdrop" id="autoAssignBackdrop">
-  <div class="modal modal-wrap" id="autoAssignModal"></div>
+<!-- Modal: Create Campaign -->
+<div class="modal-backdrop" id="campaignBackdrop">
+  <div class="modal modal-wrap">
+    <button class="btn-sm btn-ghost modal-close" onclick="closeCampaignModal()">Close</button>
+    <h2>Create New Email Campaign</h2>
+    <p class="sub">Queue and dispatch personalized bulk emails with real-time tracking.</p>
+
+    <label>Campaign Name *</label>
+    <input id="cmpName" placeholder="e.g. Q3 Investor Outreach Campaign">
+
+    <label>Sender Desk *</label>
+    <select id="cmpDeskSelect"></select>
+
+    <label>Email Subject *</label>
+    <input id="cmpSubject" placeholder="Quick question regarding {MARKET}">
+
+    <label>Email Body * (HTML or Text)</label>
+    <textarea id="cmpBody" style="min-height:140px;" placeholder="Hi {NAME},&#10;&#10;I saw your property work in {MARKET}..."></textarea>
+
+    <label>Target Recipients</label>
+    <select id="cmpRecipients">
+      <option value="all">All Contacts</option>
+      <option value="unsent">Unsent Contacts Only</option>
+    </select>
+
+    <div class="modal-actions">
+      <button class="btn-primary" id="launchCampaignBtn" style="width:100%;padding:12px;font-size:14px;background:var(--emerald);">🚀 Launch Campaign into Queue</button>
+    </div>
+  </div>
 </div>
 
-<!-- Settings modal -->
+<!-- Modal: Settings -->
 <div class="modal-backdrop" id="settingsBackdrop">
   <div class="modal modal-wrap" id="settingsModal"></div>
 </div>
 
-<!-- Add contacts modal -->
+<!-- Modal: Add Contacts -->
 <div class="modal-backdrop" id="addBackdrop">
   <div class="modal modal-wrap">
     <button class="btn-sm btn-ghost modal-close" id="closeAddModal">Close</button>
-    <h2>Add contacts</h2>
-    <p class="sub">One per line: <span class="mono">Name, email, market</span> (market optional)</p>
-    <textarea id="pasteArea" style="min-height:160px;" placeholder="Sarah Cole, sarah@investorgroup.com, Dallas TX
-Mike Torres, mike.t@example.com
-Priya Nandan, priya@nandanrealty.com, Austin TX"></textarea>
+    <h2>Add Contacts</h2>
+    <p class="sub">One per line: <span class="mono">Name, email, market</span></p>
+    <textarea id="pasteArea" style="min-height:160px;" placeholder="Sarah Cole, sarah@investorgroup.com, Dallas TX&#10;Mike Torres, mike.t@example.com&#10;Priya Nandan, priya@nandanrealty.com, Austin TX"></textarea>
     <div class="modal-actions">
-      <button class="btn-primary" id="parseAddContacts">Add to board</button>
-      <button class="btn-ghost" id="addOneManual">Add single contact instead</button>
-    </div>
-    <div id="manualFields" style="display:none;margin-top:12px;">
-      <div class="field-row">
-        <div><label>Name</label><input id="manName"></div>
-        <div><label>Email</label><input id="manEmail"></div>
-      </div>
-      <label>Market (optional)</label>
-      <input id="manMarket">
-      <div class="modal-actions">
-        <button class="btn-primary" id="addManualBtn">Add contact</button>
-      </div>
+      <button class="btn-primary" id="parseAddContacts">Add to Board</button>
     </div>
   </div>
 </div>
 
-<!-- Contact detail modal -->
-<div class="modal-backdrop" id="detailBackdrop">
-  <div class="modal modal-wrap" id="detailModal"></div>
-</div>
-
-<!-- Desk add/edit modal -->
-<div class="modal-backdrop" id="deskBackdrop">
-  <div class="modal modal-wrap" id="deskModal"></div>
-</div>
-
-<!-- Follow-up rules modal -->
-<div class="modal-backdrop" id="followupBackdrop">
-  <div class="modal modal-wrap" id="followupModal"></div>
-</div>
-
-<!-- Email Templates modal -->
-<div class="modal-backdrop" id="templateBackdrop">
-  <div class="modal modal-wrap" id="templateModal"></div>
-</div>
-
-<!-- Email Scheduler modal -->
-<div class="modal-backdrop" id="schedulerBackdrop">
-  <div class="modal modal-wrap" id="schedulerModal"></div>
-</div>
-
-<!-- Contact Form / Custom Quote modal -->
+<!-- Modal: Contact Quote -->
 <div class="modal-backdrop" id="contactQuoteBackdrop">
-  <div class="modal modal-wrap" id="contactQuoteModal" style="max-width:740px;">
+  <div class="modal modal-wrap" id="contactQuoteModal" style="max-width:700px;">
     <button class="btn-sm btn-ghost modal-close" id="closeContactQuoteModal">Close</button>
     <h2>Contact Form — Custom Quote Request</h2>
-    <p class="sub">Submit your project details below to receive a custom quote.</p>
+    <p class="sub">Submit your project requirement to receive a custom quote.</p>
+    
+    <label>Your Name *</label>
+    <input id="cqName" placeholder="Full name">
 
-    <div style="background:#EFF6FF;border:1px solid #BFDBFE;color:#1E40AF;padding:12px 16px;border-radius:10px;margin-bottom:16px;font-size:13px;line-height:1.5;">
-      📌 <strong>Note:</strong> You give your requirement, and we will provide a custom quote for your project!
-    </div>
-
-    <div class="field-row">
-      <div>
-        <label>Select Service Category</label>
-        <select id="cqCategory">
-          <option value="Custom Scraping & Tools">Custom Scraping & Tools</option>
-          <option value="Data Enrichment & Extraction">Data Enrichment & Extraction</option>
-          <option value="Lead Generation & Outreach">Lead Generation & Outreach</option>
-        </select>
-      </div>
-      <div>
-        <label>Select Specific Task</label>
-        <select id="cqTask">
-          <option value="Scraping Work">Scraping Work</option>
-          <option value="Custom Automation">Custom Automation</option>
-          <option value="API Integration">API Integration</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="field-row" style="margin-top:6px;">
-      <div>
-        <label>Your Name *</label>
-        <input id="cqName" placeholder="Enter your full name">
-      </div>
-      <div>
-        <label>Email Address *</label>
-        <input id="cqEmail" type="email" placeholder="e.g. psantosh1999@gmail.com">
-      </div>
-    </div>
+    <label>Email Address *</label>
+    <input id="cqEmail" type="email" placeholder="e.g. psantosh1999@gmail.com">
 
     <label>Phone Number *</label>
-    <input id="cqPhone" type="tel" placeholder="e.g. 06300590422">
+    <input id="cqPhone" type="tel" placeholder="06300590422">
 
-    <label>Project Description / Requirements *</label>
-    <textarea id="cqDescription" style="min-height:100px;" placeholder="Describe your target requirements, data fields, or scraping scope..."></textarea>
+    <label>Project Description *</label>
+    <textarea id="cqDescription" placeholder="Describe scope, lead volume, target locations..."></textarea>
 
-    <label>Upload Files (Excel, CSV, PDF, Images, Code)</label>
-    <input type="file" id="cqFile" style="padding:6px;background:var(--bg);">
-
-    <div class="modal-actions" style="margin-top:18px;">
-      <button class="btn-primary" id="submitQuoteFormBtn" style="background:#4F46E5;padding:11px 20px;font-size:14px;width:100%;">Submit Requirements for Quote</button>
+    <div class="modal-actions">
+      <button class="btn-primary" id="submitQuoteFormBtn" style="width:100%;">Submit Request for Quote</button>
     </div>
   </div>
+</div>
+
+<!-- Desk Add/Edit Modal -->
+<div class="modal-backdrop" id="deskBackdrop">
+  <div class="modal modal-wrap" id="deskModal"></div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-// 4 Default Templates for Auto-Split
-function defaultFourTemplates(personaName = 'Santosh'){
-  return [
-    {
-      name: 'Template 1 (Conversational)',
-      subject: 'Quick question regarding {MARKET} deals',
-      subjectNoMarket: 'Quick question regarding real estate deals',
-      body: `Hi {NAME},\n\nI saw you're active with real estate investing in {MARKET}.\n\nI have a fresh list of off-market seller leads pulled directly from county records in your area. Would you be open to checking out a quick 15-record sample?\n\nBest,\n${personaName}`
-    },
-    {
-      name: 'Template 2 (Direct & Short)',
-      subject: 'Off-market leads in {MARKET}?',
-      subjectNoMarket: 'Off-market property leads?',
-      body: `Hi {NAME},\n\nWanted to check if you're currently taking on new off-market deals in {MARKET}?\n\nWe pull daily probate and tax-delinquent seller leads straight from county filings. Happy to send over a free sample list if you'd like to test data quality.\n\nBest,\n${personaName}`
-    },
-    {
-      name: 'Template 3 (Friendly Pitch)',
-      subject: 'Question for {NAME}',
-      subjectNoMarket: 'Question for {NAME}',
-      body: `Hi {NAME},\n\nAre you currently looking for motivated seller leads in {MARKET}?\n\nI have some fresh county records (pre-foreclosures and absentee owners) and can send over a free test sample if you're interested.\n\nLet me know!\n\nBest,\n${personaName}`
-    },
-    {
-      name: 'Template 4 (County Data Focus)',
-      subject: 'Fresh county records for {MARKET}',
-      subjectNoMarket: 'Fresh county records for real estate',
-      body: `Hi {NAME},\n\nWe pull fresh probate and tax delinquent seller data daily straight from county court filings in {MARKET}.\n\nIf you want to evaluate a free 15-record sample, reply with your target county and I'll send it right over.\n\nBest regards,\n${personaName}`
-    }
-  ];
-}
-
-const STARTER_TEMPLATES = defaultFourTemplates('Santosh');
-const DAILY_CAP = 40;
-const FILTERS = [
-  {key:'all', label:'All'},
-  {key:'pending', label:'Not sent'},
-  {key:'sent', label:'Sent'},
-  {key:'waiting', label:'Waiting'},
-  {key:'due', label:'Follow-up due'},
-  {key:'replied', label:'Replied'},
-  {key:'opened', label:'Opened'},
-  {key:'spam', label:'Spam'},
-  {key:'complete', label:'Sequence done'}
-];
-
-function defaultFollowups(){
-  return [
-    { stage:1, day:3,
-      subject:'Re: {ORIGINAL_SUBJECT}',
-      body:`Hi {NAME}, just floating this back to the top of your inbox in case it got buried. Happy to send that free sample whenever you're ready — just reply with your target county. —{PERSONA}` },
-    { stage:2, day:6,
-      subject:'One more thing — free sample still available',
-      body:`Hi {NAME}, wanted to follow up once more. The free sample offer (15-20 records, your choice of market) is still open — no cost, no obligation. If timing isn't right, no worries at all. —{PERSONA}` },
-    { stage:3, day:10,
-      subject:'Last note from me',
-      body:`Hi {NAME}, I'll stop following up after this — didn't want to be a bother. If you ever need fresh off-market data down the road, feel free to reach out anytime. Wishing you continued success. —{PERSONA}` }
-  ];
-}
-
-let state = {
-  desks: [],
-  followups: defaultFollowups(),
-  contacts: [], // {id,name,email,market,accountId,templateIdx:0..3,sentDate,followupsSent:[{stage,date}],replied:false,closed:false,isSpam:false,opened:false,openedDate:null}
-  customTemplates: [],
-  enablePixelTracking: true,
-  trackingBaseUrl: ''
-};
-
-let activeContactId = null;
+let state = { desks: [], followups: [], contacts: [], trackingBaseUrl: '' };
 let currentFilter = 'all';
-let deskFilter = null;
-let editingDeskId = null;
-let activeTemplateTab = 0;
-let settingsTemplateTab = 0;
+let activeDeskFilter = null;
+let searchQuery = '';
 
-// Scheduler State
-let schedulerEnabled = false;
-let schedulerInterval = '1';
-let schedulerTimer = null;
-let nextRunSeconds = 0;
-let countdownTimer = null;
-
-function toast(msg){
+function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'), 2200);
+  setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-// Persistence — talks to the local Node server / SQLite database.
-async function saveState(){
-  try{
+function switchTab(tabId) {
+  document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
+
+  const btn = event?.target || document.querySelector(`.nav-tab[onclick*="${tabId}"]`);
+  if (btn) btn.classList.add('active');
+
+  const view = document.getElementById(`view-${tabId}`);
+  if (view) view.classList.add('active');
+
+  if (tabId === 'campaigns') loadCampaigns();
+  if (tabId === 'analytics') loadAnalytics();
+  if (tabId === 'templates') loadTemplates();
+}
+
+async function fetchState() {
+  try {
+    const res = await fetch('/api/state');
+    state = await res.json();
+    renderAll();
+  } catch (err) {
+    showToast('Failed to fetch state');
+  }
+}
+
+async function saveState() {
+  try {
     await fetch('/api/state', {
-      method:'PUT',
-      headers:{'Content-Type':'application/json'},
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(state)
     });
-  }catch(e){ console.error('save failed', e); toast('Save failed — is the server running?'); }
-}
-
-async function loadState(){
-  try{
-    const res = await fetch('/api/state');
-    const parsed = await res.json();
-    state.desks = parsed.desks || [];
-    if(parsed.followups && parsed.followups.length) state.followups = parsed.followups;
-    state.contacts = parsed.contacts || [];
-    if(parsed.customTemplates) state.customTemplates = parsed.customTemplates;
-    if(typeof parsed.enablePixelTracking === 'boolean') state.enablePixelTracking = parsed.enablePixelTracking;
-    return !!parsed.empty;
-  }catch(e){
-    console.error('load failed', e);
-    toast('Could not reach server');
-    return false;
+    renderAll();
+  } catch (err) {
+    showToast('Failed to save state');
   }
 }
 
-function daysBetween(dateStr){
-  if(!dateStr) return null;
-  const then = new Date(dateStr).getTime();
-  const now = Date.now();
-  return Math.floor((now - then) / 86400000);
-}
-
-function contactStage(c){
-  if(c.isSpam) return {status:'spam'};
-  if(c.replied) return {status:'replied'};
-  if(c.closed) return {status:'closed'};
-  if(!c.sentDate) return {status:'pending'};
-  const sentDays = daysBetween(c.sentDate);
-  const fCount = c.followupsSent.length;
-  const followups = state.followups;
-  if(fCount >= followups.length) return {status:'complete', sentDays};
-  const nextFollowup = followups[fCount];
-  const isDue = sentDays >= nextFollowup.day;
-  return { status: isDue ? 'due' : 'waiting', nextFollowup, sentDays };
-}
-
-function lastTouchDays(c){
-  if(c.followupsSent && c.followupsSent.length){
-    return daysBetween(c.followupsSent[c.followupsSent.length-1].date);
-  }
-  if(c.sentDate) return daysBetween(c.sentDate);
-  return null;
-}
-
-function statusPill(c){
-  if(c.isSpam) return `<span class="pill pill-spam">Spam</span>`;
-  const s = contactStage(c);
-  switch(s.status){
-    case 'pending': return `<span class="pill pill-pending">Not sent</span>`;
-    case 'waiting': return `<span class="pill pill-sent">Sent · waiting</span>`;
-    case 'due': return `<span class="pill pill-due">Follow-up ${s.nextFollowup.stage} due</span>`;
-    case 'complete': return `<span class="pill pill-done">Sequence done</span>`;
-    case 'replied': return `<span class="pill pill-replied">Replied</span>`;
-    case 'closed': return `<span class="pill pill-done">Closed</span>`;
-    case 'spam': return `<span class="pill pill-spam">Spam</span>`;
-  }
-}
-
-function openedPill(c){
-  if(c.isSpam) return `<span class="pill pill-spam">Spam</span>`;
-  if(c.opened) {
-    const days = c.openedDate ? daysBetween(c.openedDate) : null;
-    return `<span class="pill pill-opened">Opened ${days===0 ? '(today)' : (days ? days+'d ago' : '')}</span>`;
-  }
-  if(c.sentDate) return `<span class="pill pill-unopened">Unopened</span>`;
-  return `—`;
-}
-
-function deskById(id){
-  return state.desks.find(d=>d.id===id) || null;
-}
-
-function render(){
+function renderAll() {
   renderDesks();
-  renderStats();
-  renderFilterRow();
-  renderLedger();
-  const due = state.contacts.filter(c=>contactStage(c).status==='due').length;
-  document.getElementById('sendAllDueBtn').style.display = due>0 ? 'inline-block' : 'none';
-  document.getElementById('sendAllDueBtn').textContent = `Send all due follow-ups (${due})`;
-  updateSchedulerUI();
-
-  const notice = document.getElementById('setupNotice');
-  const validDesks = state.desks.filter(d => d.senderEmail && d.hasPassword);
-  if(state.contacts.length > 0 && validDesks.length === 0){
-    notice.style.display = 'flex';
-  } else {
-    notice.style.display = 'none';
-  }
+  renderContacts();
+  renderFilters();
+  updateWebhooksUI();
 }
 
-function renderDesks(){
-  const el = document.getElementById('desksList');
-  if(state.desks.length===0){
-    el.innerHTML = `<p class="hint">No sending desks yet. Click "+ Add desk" or "⚙ Settings" to add your first account.</p>`;
-    return;
-  }
-  el.innerHTML = state.desks.map(a=>{
-    const assigned = state.contacts.filter(c=>c.accountId===a.id);
-    const sentToday = assigned.filter(c=>c.sentDate && daysBetween(c.sentDate)===0).length;
-    const pct = Math.min(100, Math.round((sentToday/DAILY_CAP)*100));
-    const warn = sentToday >= DAILY_CAP;
-    return `<div class="desk ${deskFilter===a.id?'active':''}" data-desk="${a.id}">
+function updateWebhooksUI() {
+  const host = state.trackingBaseUrl || window.location.origin;
+  document.getElementById('whGenericUrl').value = `${host}/api/webhooks/generic`;
+  document.getElementById('whSendgridUrl').value = `${host}/api/webhooks/sendgrid`;
+  document.getElementById('whSesUrl').value = `${host}/api/webhooks/ses`;
+  document.getElementById('whMailgunUrl').value = `${host}/api/webhooks/mailgun`;
+}
+
+function renderDesks() {
+  const container = document.getElementById('desksList');
+  container.innerHTML = '';
+
+  state.desks.forEach((desk, idx) => {
+    const el = document.createElement('div');
+    el.className = `desk ${activeDeskFilter === desk.id ? 'active' : ''}`;
+    el.innerHTML = `
       <div class="desk-top">
-        <span class="desk-name" data-filter-desk="${a.id}">${a.name}</span>
-        <span class="desk-icons">
-          <button class="icon-btn" data-edit-desk="${a.id}" title="Edit mail & templates">✎</button>
-          <button class="icon-btn" data-del-desk="${a.id}" title="Delete desk">🗑</button>
-        </span>
+        <span class="desk-name" onclick="filterByDesk('${desk.id}')">${desk.name}</span>
+        <div class="desk-icons">
+          <button class="icon-btn" onclick="editDesk('${desk.id}')">✏️</button>
+          <button class="icon-btn" onclick="deleteDesk('${desk.id}')">🗑️</button>
+        </div>
       </div>
-      <div class="desk-angle" data-filter-desk="${a.id}">${a.angle} · ${assigned.length} contact(s) (4-Templates)</div>
-      <div class="desk-load ${warn?'desk-cap-warn':''}">${sentToday}/${DAILY_CAP} sent today</div>
-      <div class="desk-bar"><div class="desk-bar-fill" style="width:${pct}%;background:${warn?'#A6432F':'#3B6E62'}"></div></div>
-    </div>`;
-  }).join('');
-
-  el.querySelectorAll('[data-filter-desk]').forEach(elm=>{
-    elm.addEventListener('click', ()=>{
-      const id = elm.dataset.filterDesk;
-      deskFilter = deskFilter === id ? null : id;
-      document.getElementById('clearDeskFilter').style.display = deskFilter ? 'block' : 'none';
-      renderDesks();
-      renderLedger();
-    });
-  });
-  el.querySelectorAll('[data-edit-desk]').forEach(btn=>{
-    btn.addEventListener('click', (e)=>{ e.stopPropagation(); openDeskModal(btn.dataset.editDesk); });
-  });
-  el.querySelectorAll('[data-del-desk]').forEach(btn=>{
-    btn.addEventListener('click', (e)=>{
-      e.stopPropagation();
-      const id = btn.dataset.delDesk;
-      const affected = state.contacts.filter(c=>c.accountId===id).length;
-      const msg = affected>0
-        ? `Delete this desk? ${affected} contact(s) assigned to it will become unassigned.`
-        : `Delete this desk?`;
-      if(confirm(msg)){
-        state.contacts.forEach(c=>{ if(c.accountId===id) c.accountId=null; });
-        state.desks = state.desks.filter(d=>d.id!==id);
-        if(deskFilter===id) deskFilter=null;
-        saveState(); render();
-        toast('Desk deleted');
-      }
-    });
-  });
-}
-
-function renderStats(){
-  const total = state.contacts.length;
-  let pending=0, sent=0, waiting=0, due=0, replied=0, opened=0, spam=0;
-  state.contacts.forEach(c=>{
-    if(c.isSpam) { spam++; return; }
-    if(c.opened) opened++;
-    if(c.sentDate) sent++;
-    const s = contactStage(c).status;
-    if(s==='pending') pending++;
-    else if(s==='waiting') waiting++;
-    else if(s==='due') due++;
-    else if(s==='replied') replied++;
-  });
-  document.getElementById('stats').innerHTML = `
-    <div class="stat clickable ${currentFilter==='all'?'active':''}" data-filter="all"><div class="n">${total}</div><div class="l">Contacts</div></div>
-    <div class="stat pending clickable ${currentFilter==='pending'?'active':''}" data-filter="pending"><div class="n">${pending}</div><div class="l">Not sent</div></div>
-    <div class="stat sent clickable ${currentFilter==='sent'?'active':''}" data-filter="sent"><div class="n" style="color:var(--primary);">${sent}</div><div class="l">SENT</div></div>
-    <div class="stat sent clickable ${currentFilter==='waiting'?'active':''}" data-filter="waiting"><div class="n">${waiting}</div><div class="l">Waiting</div></div>
-    <div class="stat due clickable ${currentFilter==='due'?'active':''}" data-filter="due"><div class="n">${due}</div><div class="l">Follow-up due</div></div>
-    <div class="stat replied clickable ${currentFilter==='replied'?'active':''}" data-filter="replied"><div class="n">${replied}</div><div class="l">Replied</div></div>
-    <div class="stat opened clickable ${currentFilter==='opened'?'active':''}" data-filter="opened"><div class="n">${opened}</div><div class="l">Opened</div></div>
-    <div class="stat spam clickable ${currentFilter==='spam'?'active':''}" data-filter="spam"><div class="n">${spam}</div><div class="l">Spam Box</div></div>
-  `;
-  document.getElementById('stats').querySelectorAll('.stat').forEach(elm=>{
-    elm.addEventListener('click', ()=>{ currentFilter = elm.dataset.filter; render(); });
-  });
-}
-
-function renderFilterRow(){
-  const row = document.getElementById('filterRow');
-  row.innerHTML = FILTERS.map(f=>`<button class="chip ${currentFilter===f.key?'active':''}" data-filter="${f.key}">${f.label}</button>`).join('');
-  row.querySelectorAll('.chip').forEach(ch=>{
-    ch.addEventListener('click', ()=>{ currentFilter = ch.dataset.filter; render(); });
-  });
-}
-
-function renderLedger(){
-  const body = document.getElementById('ledgerBody');
-  const empty = document.getElementById('emptyState');
-  const q = document.getElementById('searchBox').value.trim().toLowerCase();
-  let list = state.contacts;
-
-  if(currentFilter === 'spam'){
-    list = list.filter(c => c.isSpam);
-  } else if(currentFilter === 'sent'){
-    list = list.filter(c => c.sentDate && !c.isSpam);
-  } else if(currentFilter === 'opened'){
-    list = list.filter(c => c.opened && !c.isSpam);
-  } else if(currentFilter !== 'all'){
-    list = list.filter(c => !c.isSpam && contactStage(c).status === currentFilter);
-  } else {
-    list = list.filter(c => !c.isSpam);
-  }
-
-  if(deskFilter !== null){
-    list = list.filter(c => c.accountId === deskFilter);
-  }
-  if(q){
-    list = list.filter(c => (c.name+c.email+(c.market||'')).toLowerCase().includes(q));
-  }
-  if(list.length===0){
-    body.innerHTML=''; empty.style.display='block';
-    return;
-  }
-  empty.style.display='none';
-  body.innerHTML = list.map(c=>{
-    const acct = c.accountId ? deskById(c.accountId) : null;
-    const tIdx = typeof c.templateIdx === 'number' ? c.templateIdx + 1 : 1;
-    const lt = lastTouchDays(c);
-    return `<tr data-id="${c.id}">
-      <td class="name-cell">${c.name}<span class="em">${c.email}</span></td>
-      <td>${c.market||'—'}</td>
-      <td class="acct-tag">${acct ? `${acct.name} · <span style="color:var(--primary);font-weight:600;">Template ${tIdx}</span>` : '<em>unassigned</em>'}</td>
-      <td>${statusPill(c)}</td>
-      <td>${openedPill(c)}</td>
-      <td class="acct-tag">${lt===null ? '—' : lt+'d ago'}</td>
-      <td><button class="btn-sm btn-ghost open-detail">Open</button></td>
-    </tr>`;
-  }).join('');
-  body.querySelectorAll('tr').forEach(tr=>{
-    tr.addEventListener('click', ()=>openDetail(tr.dataset.id));
-  });
-}
-
-// Open Count-Based Auto-Assign Modal with 4-Template Auto-Split
-function openAutoAssignModal(){
-  const modal = document.getElementById('autoAssignModal');
-  if(state.desks.length === 0){
-    toast('Please add at least 1 sending desk in Settings first.');
-    openSettingsModal();
-    return;
-  }
-
-  const unassignedCount = state.contacts.filter(c => !c.accountId).length;
-  const totalCount = state.contacts.length;
-  const defaultSplit = Math.ceil(unassignedCount / state.desks.length) || 10;
-
-  modal.innerHTML = `
-    <button class="btn-sm btn-ghost modal-close" id="closeAutoAssignModal">Close</button>
-    <h2>⚡ Count-Based Auto-Assign (4-Template Auto-Split)</h2>
-    <p class="sub">Specify contact counts for each mail account. The 4 email templates will automatically split evenly (T1, T2, T3, T4) among assigned contacts!</p>
-
-    <div style="background:var(--bg);padding:12px;border-radius:10px;margin-bottom:14px;font-size:12px;">
-      <strong>Unassigned Contacts:</strong> <span style="font-weight:700;color:var(--primary);">${unassignedCount}</span> of ${totalCount} total contacts
-    </div>
-
-    <div style="margin-bottom:14px;">
-      <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);margin-bottom:10px;">Set Count per Mail Account</h3>
-      <div id="deskQuotaList">
-        ${state.desks.map(d => {
-          const currentlyAssigned = state.contacts.filter(c => c.accountId === d.id).length;
-          return `
-            <div class="quota-row">
-              <div>
-                <strong style="font-size:13px;">${d.name}</strong>
-                <div class="hint">${d.senderEmail || 'No email set'} · Currently: ${currentlyAssigned} contact(s) (4 Templates)</div>
-              </div>
-              <div style="display:flex;align-items:center;gap:6px;">
-                <span class="hint">Assign:</span>
-                <input type="number" class="desk-quota-input" data-desk-id="${d.id}" value="${defaultSplit}" min="0">
-              </div>
-            </div>
-          `;
-        }).join('')}
-      </div>
-    </div>
-
-    <div style="display:flex;gap:8px;margin-bottom:14px;">
-      <button class="btn-sm btn-ghost" id="presetEqualBtn">⚖ Equal Split (${Math.ceil(unassignedCount / state.desks.length)})</button>
-      <button class="btn-sm btn-ghost" id="preset40Btn">📊 Set 40 Daily Cap</button>
-    </div>
-
-    <div style="margin-bottom:14px;">
-      <label style="display:flex;align-items:center;gap:6px;font-weight:500;text-transform:none;cursor:pointer;">
-        <input type="checkbox" id="reassignAllCheck" style="width:auto;cursor:pointer;"> Re-assign all contacts from scratch (override current assignments)
-      </label>
-    </div>
-
-    <div class="modal-actions">
-      <button class="btn-primary" id="runAutoAssignBtn">▶ Run Auto-Assign & Split 4 Templates</button>
-    </div>
-  `;
-
-  document.getElementById('closeAutoAssignModal').onclick = () => document.getElementById('autoAssignBackdrop').classList.remove('open');
-
-  document.getElementById('presetEqualBtn').onclick = () => {
-    const eq = Math.ceil(unassignedCount / state.desks.length) || 10;
-    modal.querySelectorAll('.desk-quota-input').forEach(inp => inp.value = eq);
-  };
-
-  document.getElementById('preset40Btn').onclick = () => {
-    modal.querySelectorAll('.desk-quota-input').forEach(inp => inp.value = 40);
-  };
-
-  document.getElementById('runAutoAssignBtn').onclick = () => {
-    const quotaMap = {};
-    modal.querySelectorAll('.desk-quota-input').forEach(inp => {
-      quotaMap[inp.dataset.deskId] = Number(inp.value) || 0;
-    });
-    const reassignAll = document.getElementById('reassignAllCheck').checked;
-    
-    applyCountBasedAutoAssign(quotaMap, reassignAll);
-    document.getElementById('autoAssignBackdrop').classList.remove('open');
-  };
-
-  document.getElementById('autoAssignBackdrop').classList.add('open');
-}
-
-function applyCountBasedAutoAssign(quotaMap, reassignAll = false){
-  if(reassignAll){
-    state.contacts.forEach(c => { c.accountId = null; c.templateIdx = 0; });
-  }
-
-  const unassigned = state.contacts.filter(c => !c.accountId);
-  const currentAssigned = {};
-  const currentTplCounter = {};
-
-  state.desks.forEach(d => {
-    currentAssigned[d.id] = state.contacts.filter(c => c.accountId === d.id).length;
-    currentTplCounter[d.id] = currentAssigned[d.id];
-  });
-
-  let newlyAssigned = 0;
-  for(const c of unassigned){
-    const targetDesk = state.desks.find(d => {
-      const quota = Number(quotaMap[d.id]) || 0;
-      return currentAssigned[d.id] < quota;
-    });
-
-    if(targetDesk){
-      c.accountId = targetDesk.id;
-      const tplCount = (targetDesk.templates && targetDesk.templates.length) ? targetDesk.templates.length : 4;
-      c.templateIdx = currentTplCounter[targetDesk.id] % tplCount;
-      currentAssigned[targetDesk.id]++;
-      currentTplCounter[targetDesk.id]++;
-      newlyAssigned++;
-    }
-  }
-
-  saveState();
-  render();
-  toast(`Auto-assigned ${newlyAssigned} contact(s) with 4-template auto-split!`);
-}
-
-function autoAssign(){
-  openAutoAssignModal();
-}
-
-function parsePastedContacts(text){
-  return text.split('\n').map(l=>l.trim()).filter(Boolean).map(line=>{
-    const parts = line.split(',').map(p=>p.trim());
-    return { name: parts[0]||'', email: parts[1]||'', market: parts[2]||'' };
-  }).filter(p=>p.name && p.email);
-}
-
-function addContacts(newOnes){
-  newOnes.forEach(nc=>{
-    state.contacts.push({
-      id: 'c'+Date.now()+Math.random().toString(36).slice(2,7),
-      name: nc.name, email: nc.email, market: nc.market||'',
-      accountId: state.desks.length > 0 ? state.desks[0].id : null,
-      templateIdx: 0,
-      sentDate: null, followupsSent: [], replied:false, closed:false,
-      isSpam:false, opened:false, openedDate:null
-    });
-  });
-  saveState();
-  render();
-}
-
-function composeEmail(c){
-  const acct = deskById(c.accountId);
-  if(!acct) return { kind:'initial', subject:'No desk assigned', body:'' };
-  const s = contactStage(c);
-
-  const templates = (acct.templates && acct.templates.length) ? acct.templates : defaultFourTemplates(acct.name);
-  const tIdx = (typeof c.templateIdx === 'number' && templates[c.templateIdx]) ? c.templateIdx : 0;
-  const tpl = templates[tIdx] || templates[0];
-
-  if(s.status==='pending' || !c.sentDate){
-    const subject = c.market ? tpl.subject.replace('{MARKET}', c.market) : tpl.subjectNoMarket;
-    const body = tpl.body.replace(/\{NAME\}/g, c.name.split(' ')[0]).replace(/\{MARKET\}/g, c.market || 'your area');
-    return { kind:'initial', subject, body, templateName: tpl.name || `Template ${tIdx+1}` };
-  }
-
-  if(s.status==='due'){
-    const f = s.nextFollowup;
-    const origSubject = c.market ? tpl.subject.replace('{MARKET}', c.market) : tpl.subjectNoMarket;
-    const subject = f.subject.replace('{ORIGINAL_SUBJECT}', origSubject);
-    const body = f.body.replace(/\{NAME\}/g, c.name.split(' ')[0]).replace('{PERSONA}', acct.name);
-    return { kind:'followup', subject, body, stage:f.stage };
-  }
-
-  const subject = c.market ? tpl.subject.replace('{MARKET}', c.market) : tpl.subjectNoMarket;
-  const body = tpl.body.replace(/\{NAME\}/g, c.name.split(' ')[0]);
-  return { kind:'reference', subject, body };
-}
-
-// POST a composed email to the server, which sends it from the desk's Gmail mailbox.
-async function sendViaGmail(c, email){
-  const res = await fetch('/api/send', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      deskId: c.accountId,
-      to: c.email,
-      subject: email.subject,
-      body: email.body,
-      contactId: c.id,
-      enableTracking: !!state.enablePixelTracking,
-      trackingBaseUrl: state.trackingBaseUrl || undefined
-    })
-  });
-  const data = await res.json().catch(()=>({}));
-  if(!res.ok || !data.ok){
-    toast('Send failed: ' + (data.error || res.status));
-    return false;
-  }
-  return true;
-}
-
-function openDetail(id){
-  activeContactId = id;
-  const c = state.contacts.find(x=>x.id===id);
-  const modal = document.getElementById('detailModal');
-
-  if(!c.accountId){
-    if(state.desks.length===0){
-      modal.innerHTML = `
-        <button class="btn-sm btn-ghost modal-close" id="closeDetail">Close</button>
-        <h2>${c.name}</h2>
-        <p class="sub">${c.email}${c.market?' · '+c.market:''}</p>
-        <p class="stage-note">No mail accounts exist yet. Close this and click "⚙ Settings" or "+ Add desk" first.</p>
-      `;
-      document.getElementById('closeDetail').onclick = closeDetail;
-      document.getElementById('detailBackdrop').classList.add('open');
-      return;
-    }
-    modal.innerHTML = `
-      <button class="btn-sm btn-ghost modal-close" id="closeDetail">Close</button>
-      <h2>${c.name}</h2>
-      <p class="sub">${c.email}${c.market?' · '+c.market:''}</p>
-      <p class="stage-note">This contact isn't assigned to a desk yet. Assign one so the right template and persona is locked in — 1 account per contact.</p>
-      <label>Assign to desk / mail account</label>
-      <select id="assignSelect">
-        ${state.desks.map(a=>`<option value="${a.id}">${a.name} — ${a.angle}</option>`).join('')}
-      </select>
-      <div class="modal-actions">
-        <button class="btn-primary" id="confirmAssign">Assign</button>
-      </div>
+      <div class="desk-angle" onclick="filterByDesk('${desk.id}')">${desk.angle || 'No angle set'}</div>
     `;
-    document.getElementById('confirmAssign').onclick = ()=>{
-      c.accountId = document.getElementById('assignSelect').value;
-      c.templateIdx = 0;
-      saveState(); render(); openDetail(id);
-    };
-  } else {
-    const email = composeEmail(c);
-    const s = contactStage(c);
-    const acct = deskById(c.accountId);
-    const tIdx = typeof c.templateIdx === 'number' ? c.templateIdx : 0;
-
-    let stageNote = '';
-    if(c.isSpam) stageNote = `<div class="stage-note" style="background:var(--crimson-soft);color:var(--crimson);">🚫 Marked as Spam. Excluded from automated sending.</div>`;
-    else if(s.status==='waiting') stageNote = `<div class="stage-note">Sent ${s.sentDays} day(s) ago. Next follow-up (Day ${s.nextFollowup.day}) unlocks once ${s.nextFollowup.day} days pass.</div>`;
-    else if(s.status==='complete') stageNote = `<div class="stage-note">All follow-ups sent. Sequence complete.</div>`;
-    else if(s.status==='replied') stageNote = `<div class="stage-note" style="background:var(--violet-soft);color:var(--violet);">✓ Replied! Follow-up sequence automatically stopped.</div>`;
-
-    const openBadge = c.opened
-      ? `<span class="pill pill-opened">👁 Email Opened ${c.openedDate ? '(' + daysBetween(c.openedDate) + 'd ago)' : ''}</span>`
-      : (c.sentDate ? `<span class="pill pill-unopened">👁 Not Opened Yet</span>` : `<span class="pill pill-unopened">Not Sent Yet</span>`);
-
-    modal.innerHTML = `
-      <button class="btn-sm btn-ghost modal-close" id="closeDetail">Close</button>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-right:40px;">
-        <h2>${c.name}</h2>
-        ${openBadge}
-      </div>
-      <p class="sub">${c.email}${c.market?' · '+c.market:''} — desk: <strong>${acct ? acct.name : 'Unassigned'}</strong> (Template ${tIdx+1}: ${email.templateName || 'Assigned'})</p>
-      <div class="email-preview">
-        <div class="email-subject">${email.subject}</div>
-        <div>${email.body}</div>
-      </div>
-      ${stageNote}
-      <div class="modal-actions">
-        <button class="btn-primary" id="sendGmailBtn">Send via Gmail</button>
-        <button class="btn-ghost" id="copyEmail">Copy email</button>
-        <button class="btn-ghost" id="mailtoBtn">Open in mail app</button>
-        <button class="btn-ghost" id="changeTemplateContactBtn">Switch Template Variant</button>
-      </div>
-      ${(!acct || !acct.senderEmail || !acct.hasPassword) ? `<p class="hint" style="color:#c96;">⚠ This desk has no sending mailbox set. Click "⚙ Settings" or "Edit desk" to add Gmail + App Password.</p>` : (!c.email ? `<p class="hint" style="color:#c96;">⚠ This contact has no email address, so it can't be sent to.</p>` : '')}
-      <div class="status-row">
-        ${!c.sentDate ? `<button class="btn-sm btn-primary" id="markSent">Mark initial email sent</button>` : ''}
-        ${s.status==='due' ? `<button class="btn-sm btn-primary" id="markFollowup">Mark follow-up ${s.nextFollowup.stage} sent</button>` : ''}
-        ${!c.replied ? `<button class="btn-sm btn-ghost" id="markReplied" style="background:var(--violet-soft);color:var(--violet);">Mark as Replied (+1 Count & Stop Follow-ups)</button>` : `<button class="btn-sm btn-ghost" id="unmarkReplied">Unmark Replied</button>`}
-        ${c.opened ? `<button class="btn-sm btn-ghost" id="markUnopenedBtn">Mark as Unopened</button>` : `<button class="btn-sm btn-ghost" id="markOpenedBtn">Mark as Opened</button>`}
-        ${c.isSpam ? `<button class="btn-sm btn-ghost" id="unmarkSpamBtn">Unmark Spam</button>` : `<button class="btn-sm btn-warn" id="markSpamBtn">Mark as Spam</button>`}
-        <button class="btn-sm btn-ghost" id="reassign">Reassign desk</button>
-      </div>
-    `;
-
-    const sendBtn = document.getElementById('sendGmailBtn');
-    const canSend = acct && acct.senderEmail && acct.hasPassword && c.email && !c.isSpam;
-    if(!canSend){ sendBtn.disabled = true; sendBtn.style.opacity = '0.5'; sendBtn.style.cursor = 'not-allowed'; }
-    sendBtn.onclick = async ()=>{
-      if(!canSend) return;
-      sendBtn.disabled = true;
-      sendBtn.textContent = 'Sending…';
-      try {
-        const ok = await sendViaGmail(c, email);
-        if(!ok){ sendBtn.disabled = false; sendBtn.textContent = 'Send via Gmail'; return; }
-        if(email.kind === 'initial'){ c.sentDate = new Date().toISOString(); }
-        else if(email.kind === 'followup'){ c.followupsSent.push({stage: email.stage, date: new Date().toISOString()}); }
-        saveState(); render(); openDetail(id);
-        toast(`Sent to ${c.email}`);
-      } catch(err){
-        sendBtn.disabled = false;
-        sendBtn.textContent = 'Send via Gmail';
-        toast('Send failed: ' + (err && err.message || err));
-      }
-    };
-
-    document.getElementById('copyEmail').onclick = ()=>{
-      navigator.clipboard.writeText(`Subject: ${email.subject}\n\n${email.body}`);
-      toast('Email copied to clipboard');
-    };
-    document.getElementById('mailtoBtn').onclick = ()=>{
-      const mailto = `mailto:${encodeURIComponent(c.email)}?subject=${encodeURIComponent(email.subject)}&body=${encodeURIComponent(email.body)}`;
-      window.open(mailto, '_blank');
-    };
-    document.getElementById('changeTemplateContactBtn').onclick = ()=>{
-      c.templateIdx = ((c.templateIdx || 0) + 1) % 4;
-      saveState(); render(); openDetail(id);
-      toast(`Switched to Template ${c.templateIdx + 1}`);
-    };
-
-    const markSentBtn = document.getElementById('markSent');
-    if(markSentBtn) markSentBtn.onclick = ()=>{
-      c.sentDate = new Date().toISOString();
-      saveState(); render(); openDetail(id);
-      toast('Marked as sent — follow-ups now on the clock');
-    };
-    const markFollowupBtn = document.getElementById('markFollowup');
-    if(markFollowupBtn) markFollowupBtn.onclick = ()=>{
-      c.followupsSent.push({stage:s.nextFollowup.stage, date:new Date().toISOString()});
-      saveState(); render(); openDetail(id);
-      toast('Follow-up logged');
-    };
-    const markRepliedBtn = document.getElementById('markReplied');
-    if(markRepliedBtn) markRepliedBtn.onclick = ()=>{
-      c.replied = true;
-      saveState(); render(); openDetail(id);
-      toast('Marked as Replied (+1 Count Up & Follow-ups Stopped)');
-    };
-    const unmarkRepliedBtn = document.getElementById('unmarkReplied');
-    if(unmarkRepliedBtn) unmarkRepliedBtn.onclick = ()=>{
-      c.replied = false;
-      saveState(); render(); openDetail(id);
-      toast('Unmarked Replied');
-    };
-    const markOpenedBtn = document.getElementById('markOpenedBtn');
-    if(markOpenedBtn) markOpenedBtn.onclick = ()=>{
-      c.opened = true;
-      c.openedDate = new Date().toISOString();
-      saveState(); render(); openDetail(id);
-      toast('Marked as Opened');
-    };
-    const markUnopenedBtn = document.getElementById('markUnopenedBtn');
-    if(markUnopenedBtn) markUnopenedBtn.onclick = ()=>{
-      c.opened = false;
-      c.openedDate = null;
-      saveState(); render(); openDetail(id);
-      toast('Marked as Unopened');
-    };
-    const markSpamBtn = document.getElementById('markSpamBtn');
-    if(markSpamBtn) markSpamBtn.onclick = ()=>{
-      c.isSpam = true;
-      saveState(); render(); openDetail(id);
-      toast('Moved to Spam Box');
-    };
-    const unmarkSpamBtn = document.getElementById('unmarkSpamBtn');
-    if(unmarkSpamBtn) unmarkSpamBtn.onclick = ()=>{
-      c.isSpam = false;
-      saveState(); render(); openDetail(id);
-      toast('Removed from Spam');
-    };
-
-    document.getElementById('reassign').onclick = ()=>{
-      c.accountId = null;
-      saveState(); render(); openDetail(id);
-    };
-  }
-
-  document.getElementById('closeDetail').onclick = closeDetail;
-  document.getElementById('detailBackdrop').classList.add('open');
-}
-
-function closeDetail(){
-  document.getElementById('detailBackdrop').classList.remove('open');
-  activeContactId = null;
-}
-
-async function sendAllDue(){
-  const due = state.contacts.filter(c => !c.isSpam && !c.replied && contactStage(c).status === 'due');
-  if(!due.length){ toast('Nothing due'); return; }
-  if(!confirm(`Send ${due.length} due follow-up(s) via Gmail now?`)) return;
-
-  const btn = document.getElementById('sendAllDueBtn');
-  btn.disabled = true;
-  let sent = 0, skipped = 0, failed = 0;
-
-  for(const c of due){
-    const acct = deskById(c.accountId);
-    if(!acct || !acct.senderEmail || !acct.hasPassword || !c.email){ skipped++; continue; }
-    const email = composeEmail(c);
-    try {
-      const ok = await sendViaGmail(c, email);
-      if(ok){
-        c.followupsSent.push({stage: email.stage, date: new Date().toISOString()});
-        sent++;
-      } else { failed++; }
-    } catch { failed++; }
-  }
-
-  saveState();
-  render();
-  btn.disabled = false;
-  toast(`Sent ${sent}${skipped?`, skipped ${skipped} (no mailbox/email)`:''}${failed?`, ${failed} failed`:''}`);
-}
-
-function exportCsv(){
-  const rows = [['Name','Email','Market','Desk','Template Variant','Status','Opened','Days since last touch','Follow-ups sent','Replied','Spam']];
-  state.contacts.forEach(c=>{
-    const acct = c.accountId ? deskById(c.accountId) : null;
-    const s = contactStage(c).status;
-    const lt = lastTouchDays(c);
-    const tIdx = typeof c.templateIdx === 'number' ? c.templateIdx + 1 : 1;
-    rows.push([
-      c.name, c.email, c.market||'', acct?acct.name:'', `Template ${tIdx}`,
-      s, c.opened?'yes':'no', lt===null?'':String(lt), String(c.followupsSent.length), c.replied?'yes':'no', c.isSpam?'yes':'no'
-    ]);
+    container.appendChild(el);
   });
-  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const blob = new Blob([csv], {type:'text/csv'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'dispatch-board-export.csv';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  toast('CSV exported');
 }
 
-// ---- Settings Modal ----
-function openSettingsModal(){
-  const modal = document.getElementById('settingsModal');
-  const settingTemplates = defaultFourTemplates('Santosh P');
-  settingsTemplateTab = 0;
-
-  function renderSettingsModalBody(){
-    const tpl = settingTemplates[settingsTemplateTab];
-
-    modal.innerHTML = `
-      <button class="btn-sm btn-ghost modal-close" id="closeSettingsModal">Close</button>
-      <h2>⚙ Settings & Deliverability</h2>
-      <p class="sub">Manage sending Gmail accounts, 16-character App Passwords, and 4 Email Templates.</p>
-
-      <div class="tip-box">
-        🎯 <strong>Gmail Deliverability & Anti-Spam Tips:</strong><br>
-        • <strong>4-Template Rotation:</strong> Each account automatically rotates 4 templates to avoid sending repetitive copy.<br>
-        • <strong>Reply Count Up:</strong> Marking contacts replied stops follow-ups and increments the REPLIED counter.<br>
-        • <strong>Gradual Pace:</strong> Use the 1-2 minute or random scheduler interval to space out sends naturally.
-      </div>
-
-      <div style="background:var(--bg);padding:14px;border-radius:10px;margin-bottom:16px;">
-        <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);margin-bottom:10px;">Configured Sending Mail Accounts</h3>
-        ${state.desks.length === 0 ? `<p class="hint">No mail accounts added yet. Add your Gmail address below.</p>` : `
-          <div style="display:flex;flex-direction:column;gap:10px;">
-            ${state.desks.map(d => `
-              <div style="background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px;">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-                  <strong style="font-size:14px;">${d.name} (${d.angle || 'Outreach'})</strong>
-                  <button class="btn-sm btn-ghost edit-acct-btn" data-id="${d.id}">✎ Edit Mail & 4 Templates</button>
-                </div>
-                <div style="font-size:12px;color:var(--ink-soft);margin-bottom:4px;">
-                  <strong>Sender Gmail:</strong> ${d.senderEmail ? `<span class="mono">${d.senderEmail}</span>` : '<span style="color:var(--brick);">⚠️ No Gmail address set</span>'}
-                  · <strong>Password:</strong> ${d.hasPassword ? '<span style="color:var(--emerald);font-weight:600;">✓ Saved</span>' : '<span style="color:var(--brick);font-weight:600;">⚠️ App Password Missing</span>'}
-                </div>
-                <div style="font-size:12px;color:var(--primary);font-weight:500;">
-                  <strong>Templates:</strong> 4 Variations Active (Auto-Rotated)
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        `}
-      </div>
-
-      <div style="border-top:1px solid var(--line);padding-top:14px;">
-        <h3 style="font-size:14px;margin-bottom:4px;">Deliverability & Open Tracking Pixel</h3>
-        <div style="display:flex;align-items:center;gap:8px;margin:8px 0 10px;">
-          <input type="checkbox" id="pixelTrackingCheck" ${state.enablePixelTracking ? 'checked' : ''} style="width:auto;cursor:pointer;">
-          <label for="pixelTrackingCheck" style="margin:0;cursor:pointer;text-transform:none;font-weight:500;">Enable HTML Open Tracking Pixel</label>
-        </div>
-        <label>Public Tracking Base URL (for Gmail / external email tracking)</label>
-        <input id="setTrackingUrl" value="${(state.trackingBaseUrl||'').replace(/"/g,'&quot;')}" placeholder="e.g. https://dispatch-board.onrender.com or https://xxxx.loca.lt">
-        <p class="hint">When running locally, Gmail proxy requires a public URL (e.g. Render link or ngrok URL) for open tracking to trigger.</p>
-      </div>
-
-      <div style="border-top:1px solid var(--line);padding-top:14px;">
-        <h3 style="font-size:14px;margin-bottom:4px;">+ Add New Mail Account, 16-Digit Password & 4 Templates</h3>
-        <p class="hint" style="margin-bottom:12px;">Enter your Gmail address, 16-character <a href="https://myaccount.google.com/apppasswords" target="_blank">Gmail App Password</a>, and customize your 4 templates below.</p>
-
-        <div class="field-row">
-          <div>
-            <label>Account / Sender Name</label>
-            <input id="setAcctName" value="Santosh P" placeholder="e.g. Sales Team / Sarah">
-          </div>
-          <div>
-            <label>Sender Gmail Address</label>
-            <input id="setAcctEmail" type="email" placeholder="e.g. sarah@gmail.com">
-          </div>
-        </div>
-
-        <label>Gmail 16-Digit App Password</label>
-        <input id="setAcctPassword" type="password" autocomplete="new-password" placeholder="16-character app password">
-
-        <hr style="border:none;border-top:1px dashed var(--line);margin:16px 0 10px;">
-        <h4 style="margin:0;font-size:13px;">Customize 4 Email Templates for this Account:</h4>
-
-        <div class="template-tab-bar">
-          <div class="template-tab ${settingsTemplateTab===0?'active':''}" data-stab="0">Template 1</div>
-          <div class="template-tab ${settingsTemplateTab===1?'active':''}" data-stab="1">Template 2</div>
-          <div class="template-tab ${settingsTemplateTab===2?'active':''}" data-stab="2">Template 3</div>
-          <div class="template-tab ${settingsTemplateTab===3?'active':''}" data-stab="3">Template 4</div>
-        </div>
-
-        <label>Template Name</label>
-        <input id="setTplName" value="${(tpl.name||'').replace(/"/g,'&quot;')}">
-
-        <label>Subject Line (with {MARKET})</label>
-        <input id="setTplSubject" value="${(tpl.subject||'').replace(/"/g,'&quot;')}">
-
-        <label>Fallback Subject Line (no market)</label>
-        <input id="setTplSubjectNoMarket" value="${(tpl.subjectNoMarket||'').replace(/"/g,'&quot;')}">
-
-        <label>Email Body</label>
-        <textarea id="setTplBody" style="min-height:100px;">${tpl.body}</textarea>
-
-        <div class="modal-actions" style="margin-top:14px;">
-          <button class="btn-primary" id="saveNewSettingAcctBtn">Add Mail Account & 4 Templates</button>
-        </div>
-      </div>
-
-      <div style="border-top:1px solid var(--line);padding-top:14px;margin-top:16px;">
-        <h3 style="font-size:14px;color:var(--brick);margin-bottom:4px;">Danger Zone</h3>
-        <p class="hint" style="margin-bottom:10px;">Reset or clear data from your board.</p>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn-danger btn-sm" id="clearAllDesksBtn">🗑 Clear All Sending Desks</button>
-          <button class="btn-danger btn-sm" id="clearAllContactsBtn">🗑 Clear All Contacts</button>
-        </div>
-      </div>
-    `;
-
-    document.getElementById('closeSettingsModal').onclick = () => document.getElementById('settingsBackdrop').classList.remove('open');
-
-    const pixelCheck = document.getElementById('pixelTrackingCheck');
-    if(pixelCheck){
-      pixelCheck.addEventListener('change', () => {
-        state.enablePixelTracking = pixelCheck.checked;
-        saveState();
-        toast(pixelCheck.checked ? 'HTML tracking pixel enabled' : 'Clean text deliverability mode enabled');
-      });
-    }
-
-    const trackingInput = document.getElementById('setTrackingUrl');
-    if(trackingInput){
-      trackingInput.addEventListener('change', () => {
-        state.trackingBaseUrl = trackingInput.value.trim();
-        saveState();
-        toast('Public tracking URL saved');
-      });
-    }
-
-    modal.querySelectorAll('.edit-acct-btn').forEach(btn => {
-      btn.onclick = () => {
-        document.getElementById('settingsBackdrop').classList.remove('open');
-        openDeskModal(btn.dataset.id);
-      };
-    });
-
-    modal.querySelectorAll('[data-stab]').forEach(tb => {
-      tb.onclick = () => {
-        settingTemplates[settingsTemplateTab] = {
-          name: document.getElementById('setTplName').value.trim(),
-          subject: document.getElementById('setTplSubject').value.trim(),
-          subjectNoMarket: document.getElementById('setTplSubjectNoMarket').value.trim(),
-          body: document.getElementById('setTplBody').value
-        };
-        settingsTemplateTab = Number(tb.dataset.stab);
-        renderSettingsModalBody();
-      };
-    });
-
-    document.getElementById('saveNewSettingAcctBtn').onclick = () => {
-      const name = document.getElementById('setAcctName').value.trim() || 'Santosh P';
-      const senderEmail = document.getElementById('setAcctEmail').value.trim();
-      const appPassword = document.getElementById('setAcctPassword').value;
-
-      settingTemplates[settingsTemplateTab] = {
-        name: document.getElementById('setTplName').value.trim(),
-        subject: document.getElementById('setTplSubject').value.trim(),
-        subjectNoMarket: document.getElementById('setTplSubjectNoMarket').value.trim(),
-        body: document.getElementById('setTplBody').value
-      };
-
-      if(!senderEmail){
-        toast('Please enter your Sender Gmail Address');
-        return;
-      }
-
-      state.desks.push({
-        id: 'd' + Date.now() + Math.random().toString(36).slice(2, 6),
-        name,
-        angle: '4-Template Outreach',
-        senderEmail,
-        appPassword,
-        hasPassword: !!appPassword,
-        templates: settingTemplates
-      });
-
-      autoAssign();
-      saveState();
-      render();
-      document.getElementById('settingsBackdrop').classList.remove('open');
-      toast(`Added mail account "${name}" (${senderEmail}) with 4 templates`);
-    };
-
-    document.getElementById('clearAllDesksBtn').onclick = () => {
-      if(confirm('Are you sure you want to remove ALL sending desks? Contacts assigned to desks will become unassigned.')){
-        state.desks = [];
-        state.contacts.forEach(c => c.accountId = null);
-        saveState();
-        render();
-        document.getElementById('settingsBackdrop').classList.remove('open');
-        toast('All sending desks removed');
-      }
-    };
-
-    document.getElementById('clearAllContactsBtn').onclick = () => {
-      if(confirm('Are you sure you want to remove ALL contacts from the board? This action cannot be undone.')){
-        state.contacts = [];
-        saveState();
-        render();
-        document.getElementById('settingsBackdrop').classList.remove('open');
-        toast('All contacts removed');
-      }
-    };
-  }
-
-  renderSettingsModalBody();
-  document.getElementById('settingsBackdrop').classList.add('open');
+function filterByDesk(id) {
+  activeDeskFilter = activeDeskFilter === id ? null : id;
+  document.getElementById('clearDeskFilter').style.display = activeDeskFilter ? 'block' : 'none';
+  renderAll();
 }
 
-// ---- Desk add/edit modal (4-Template Manager) ----
-function openDeskModal(deskId){
-  editingDeskId = deskId || null;
-  const isEdit = !!editingDeskId;
-  const d = isEdit ? deskById(editingDeskId) : { name:'', angle:'', senderEmail:'', hasPassword:false, templates: defaultFourTemplates('Santosh P') };
-  const modal = document.getElementById('deskModal');
-  activeTemplateTab = 0;
+function renderFilters() {
+  const container = document.getElementById('filterRow');
+  const filters = [
+    { key: 'all', label: 'All' },
+    { key: 'pending', label: 'Not Sent' },
+    { key: 'sent', label: 'Sent' },
+    { key: 'opened', label: 'Opened' },
+    { key: 'clicked', label: 'Clicked' },
+    { key: 'replied', label: 'Replied' },
+    { key: 'bounced', label: 'Bounced' }
+  ];
 
-  if(!d.templates || d.templates.length < 4){
-    d.templates = defaultFourTemplates(d.name || 'Santosh P');
-  }
-
-  function renderDeskModalBody(){
-    const tpl = d.templates[activeTemplateTab];
-
-    modal.innerHTML = `
-      <button class="btn-sm btn-ghost modal-close" id="closeDeskModal">Close</button>
-      <h2>${isEdit ? 'Edit Desk & 4 Email Templates' : 'Add New Desk'}</h2>
-      <p class="sub">Configure sender credentials and customize the 4 email templates that auto-rotate across contacts.</p>
-
-      <div class="field-row">
-        <div>
-          <label>Desk / Account Name</label>
-          <input id="deskName" value="${(d.name||'').replace(/"/g,'&quot;')}" placeholder="e.g. Santosh P">
-        </div>
-        <div>
-          <label>Sender Gmail address</label>
-          <input id="deskSenderEmail" type="email" value="${(d.senderEmail||'').replace(/"/g,'&quot;')}" placeholder="e.g. hr@invest-today.com">
-        </div>
-      </div>
-
-      <label>Gmail App Password ${d.hasPassword ? '<span class="hint">(saved — leave blank to keep)</span>' : ''}</label>
-      <input id="deskAppPassword" type="password" autocomplete="new-password" value="" placeholder="${d.hasPassword ? '•••••••••••••••• (unchanged)' : '16-character app password'}">
-
-      <hr style="border:none;border-top:1px solid var(--line);margin:16px 0 10px;">
-      <h3 style="margin:0 0 4px;font-size:14px;">Configure 4 Email Templates (Auto-Rotated)</h3>
-      <p class="hint" style="margin-top:0;">Contacts assigned to this account will automatically split across these 4 templates (T1, T2, T3, T4).</p>
-
-      <div class="template-tab-bar">
-        <div class="template-tab ${activeTemplateTab===0?'active':''}" data-tab="0">Template 1</div>
-        <div class="template-tab ${activeTemplateTab===1?'active':''}" data-tab="1">Template 2</div>
-        <div class="template-tab ${activeTemplateTab===2?'active':''}" data-tab="2">Template 3</div>
-        <div class="template-tab ${activeTemplateTab===3?'active':''}" data-tab="3">Template 4</div>
-      </div>
-
-      <label>Template Name / Label</label>
-      <input id="deskTplName" value="${(tpl.name||'').replace(/"/g,'&quot;')}" placeholder="e.g. Template 1 (Conversational)">
-
-      <label>Subject line (with market)</label>
-      <input id="deskTplSubject" value="${(tpl.subject||'').replace(/"/g,'&quot;')}" placeholder="Use {MARKET} as a placeholder">
-
-      <label>Subject line (no market given)</label>
-      <input id="deskTplSubjectNoMarket" value="${(tpl.subjectNoMarket||'').replace(/"/g,'&quot;')}" placeholder="Fallback subject when contact has no market">
-
-      <label>Email body</label>
-      <textarea id="deskTplBody" style="min-height:140px;" placeholder="Use {NAME} for first name, {MARKET} for market">${tpl.body}</textarea>
-
-      <div class="modal-actions">
-        <button class="btn-primary" id="saveDeskBtn">${isEdit ? 'Save Desk & Templates' : 'Create Desk'}</button>
-        ${isEdit ? `<button class="btn-danger" id="deleteDeskBtn">Delete Desk</button>` : ''}
-      </div>
-    `;
-
-    document.getElementById('closeDeskModal').onclick = ()=> document.getElementById('deskBackdrop').classList.remove('open');
-
-    modal.querySelectorAll('.template-tab').forEach(tb => {
-      tb.onclick = () => {
-        d.templates[activeTemplateTab] = {
-          name: document.getElementById('deskTplName').value.trim(),
-          subject: document.getElementById('deskTplSubject').value.trim(),
-          subjectNoMarket: document.getElementById('deskTplSubjectNoMarket').value.trim(),
-          body: document.getElementById('deskTplBody').value
-        };
-        activeTemplateTab = Number(tb.dataset.tab);
-        renderDeskModalBody();
-      };
-    });
-
-    document.getElementById('saveDeskBtn').onclick = ()=>{
-      const name = document.getElementById('deskName').value.trim();
-      const senderEmail = document.getElementById('deskSenderEmail').value.trim();
-      const appPassword = document.getElementById('deskAppPassword').value;
-
-      d.templates[activeTemplateTab] = {
-        name: document.getElementById('deskTplName').value.trim(),
-        subject: document.getElementById('deskTplSubject').value.trim(),
-        subjectNoMarket: document.getElementById('deskTplSubjectNoMarket').value.trim(),
-        body: document.getElementById('deskTplBody').value
-      };
-
-      if(!name || !senderEmail){ toast('Name and Sender Gmail address are required'); return; }
-
-      if(isEdit){
-        Object.assign(d, {name, angle: '4-Template Outreach', senderEmail});
-        if(appPassword){ d.appPassword = appPassword; d.hasPassword = true; }
-      } else {
-        state.desks.push({
-          id: 'd'+Date.now()+Math.random().toString(36).slice(2,6),
-          name, angle: '4-Template Outreach',
-          senderEmail, appPassword, hasPassword: !!appPassword,
-          templates: d.templates
-        });
-      }
-      autoAssign();
-      saveState();
-      render();
-      document.getElementById('deskBackdrop').classList.remove('open');
-      toast(isEdit ? 'Desk updated' : 'Desk created');
-    };
-
-    const delBtn = document.getElementById('deleteDeskBtn');
-    if(delBtn){
-      delBtn.onclick = ()=>{
-        const affected = state.contacts.filter(c=>c.accountId===editingDeskId).length;
-        const msg = affected>0
-          ? `Delete this desk? ${affected} contact(s) assigned to it will become unassigned.`
-          : `Delete this desk?`;
-        if(confirm(msg)){
-          state.contacts.forEach(c=>{ if(c.accountId===editingDeskId) c.accountId=null; });
-          state.desks = state.desks.filter(x=>x.id!==editingDeskId);
-          if(deskFilter===editingDeskId) deskFilter=null;
-          saveState(); render();
-          document.getElementById('deskBackdrop').classList.remove('open');
-          toast('Desk deleted');
-        }
-      };
-    }
-  }
-
-  renderDeskModalBody();
-  document.getElementById('deskBackdrop').classList.add('open');
-}
-
-// ---- Email Templates Manager Modal ----
-function openTemplatesModal(){
-  const modal = document.getElementById('templateModal');
-  const allTemplates = [...STARTER_TEMPLATES, ...(state.customTemplates || [])];
-
-  modal.innerHTML = `
-    <button class="btn-sm btn-ghost modal-close" id="closeTemplateModal">Close</button>
-    <h2>✉ Email Templates Library</h2>
-    <p class="sub">View or add custom email templates for your outreach campaigns.</p>
-    <div id="templatesList">
-      ${allTemplates.map((t, idx) => `
-        <div class="template-card">
-          <div class="template-card-title">
-            <span>${t.name || t.persona} — ${t.angle || 'Outreach'}</span>
-          </div>
-          <div class="template-card-subject">Subject: ${t.subject}</div>
-          <div class="template-card-body">${t.body}</div>
-        </div>
-      `).join('')}
-    </div>
-    <div class="modal-actions">
-      <button class="btn-primary" id="addCustomTemplateBtn">+ Add New Custom Template</button>
-    </div>
-  `;
-
-  document.getElementById('closeTemplateModal').onclick = () => document.getElementById('templateBackdrop').classList.remove('open');
-
-  document.getElementById('addCustomTemplateBtn').onclick = () => {
-    const title = prompt('Enter template title (e.g. Template 5 - Direct Question):');
-    if(!title) return;
-    const subject = prompt('Enter Subject line:');
-    if(!subject) return;
-    const body = prompt('Enter Body text (use {NAME} for first name):');
-    if(!body) return;
-
-    if(!state.customTemplates) state.customTemplates = [];
-    state.customTemplates.push({
-      id: 'tpl_custom_' + Date.now(),
-      name: title,
-      subject,
-      subjectNoMarket: subject,
-      body
-    });
-    saveState();
-    openTemplatesModal();
-    toast('Custom template added');
-  };
-
-  document.getElementById('templateBackdrop').classList.add('open');
-}
-
-function openTemplateSelectorForDesk(deskId){
-  const desk = deskById(deskId || state.desks[0]?.id);
-  if(!desk){ toast('No desk available'); return; }
-  openDeskModal(desk.id);
-}
-
-// ---- Email Scheduler Modal & Engine ----
-function openSchedulerModal(){
-  const modal = document.getElementById('schedulerModal');
-  const validDesks = state.desks.filter(d => d.senderEmail && d.hasPassword);
-
-  let deskStatusHtml = '';
-  if(validDesks.length === 0){
-    deskStatusHtml = `
-      <div class="stage-note" style="background:var(--brick-soft);color:var(--brick);margin-bottom:14px;">
-        ⚠️ <strong>No sending mail account configured yet!</strong><br>
-        Add your Gmail address and 16-character App Password to start auto-sending.
-        <div style="margin-top:8px;">
-          <button class="btn-sm btn-primary" id="schedulerGoSettings">⚙ Add Mail & Password in Settings</button>
-        </div>
-      </div>
-    `;
-  } else {
-    deskStatusHtml = `
-      <div class="stage-note" style="background:var(--emerald-soft);color:var(--emerald);margin-bottom:14px;">
-        ✓ <strong>Mail Accounts Ready:</strong> ${validDesks.map(d=>d.name+' ('+d.senderEmail+')').join(', ')}
-      </div>
-    `;
-  }
-
-  modal.innerHTML = `
-    <button class="btn-sm btn-ghost modal-close" id="closeSchedulerModal">Close</button>
-    <h2>⏰ Email Auto-Scheduler</h2>
-    <p class="sub">Automatically send pending emails or due follow-ups at periodic intervals.</p>
-    ${deskStatusHtml}
-    <div style="background:var(--bg);padding:14px;border-radius:10px;margin-bottom:14px;">
-      <label style="margin-top:0;">Scheduler Status</label>
-      <div style="display:flex;align-items:center;gap:12px;margin:8px 0 14px;">
-        <button class="btn-primary" id="toggleSchedulerBtn" style="background:${schedulerEnabled ? 'var(--brick)' : 'var(--emerald)'}">
-          ${schedulerEnabled ? '🛑 Stop Scheduler' : '▶ Enable Auto-Scheduler'}
-        </button>
-        <span class="hint">${schedulerEnabled ? 'Scheduler is actively running in background.' : 'Scheduler is paused.'}</span>
-      </div>
-
-      <label>Sending Duration / Interval</label>
-      <select id="scheduleIntervalSelect" ${schedulerEnabled ? 'disabled' : ''}>
-        <option value="1" ${schedulerInterval==='1'?'selected':''}>Every 1 Minute</option>
-        <option value="2" ${schedulerInterval==='2'?'selected':''}>Every 2 Minutes</option>
-        <option value="random" ${schedulerInterval==='random'?'selected':''}>Random Minutes (< 15 mins)</option>
-        <option value="5" ${schedulerInterval==='5'?'selected':''}>Every 5 Minutes</option>
-        <option value="10" ${schedulerInterval==='10'?'selected':''}>Every 10 Minutes</option>
-      </select>
-      <p class="hint">Selecting "Random" picks a random delay between 1 and 14 minutes for natural outreach spacing.</p>
-    </div>
-  `;
-
-  document.getElementById('closeSchedulerModal').onclick = () => document.getElementById('schedulerBackdrop').classList.remove('open');
-  
-  const goSettingsBtn = document.getElementById('schedulerGoSettings');
-  if(goSettingsBtn){
-    goSettingsBtn.onclick = () => {
-      document.getElementById('schedulerBackdrop').classList.remove('open');
-      openSettingsModal();
-    };
-  }
-
-  document.getElementById('toggleSchedulerBtn').onclick = () => {
-    schedulerInterval = document.getElementById('scheduleIntervalSelect').value;
-    if(schedulerEnabled){
-      stopScheduler();
-      toast('Scheduler stopped');
-    } else {
-      if(validDesks.length === 0){
-        toast('Please add your Gmail address and App Password in Settings first.');
-        openSettingsModal();
-        return;
-      }
-      autoAssign();
-      startScheduler();
-      toast('Scheduler started — auto-sending emails!');
-    }
-    openSchedulerModal();
-  };
-
-  document.getElementById('schedulerBackdrop').classList.add('open');
-}
-
-function startScheduler(){
-  schedulerEnabled = true;
-  scheduleNextRun();
-}
-
-function stopScheduler(){
-  schedulerEnabled = false;
-  if(schedulerTimer) clearTimeout(schedulerTimer);
-  if(countdownTimer) clearInterval(countdownTimer);
-  schedulerTimer = null;
-  countdownTimer = null;
-  nextRunSeconds = 0;
-  updateSchedulerUI();
-}
-
-function scheduleNextRun(){
-  if(!schedulerEnabled) return;
-  let delaySec = 60;
-  if(schedulerInterval === '1') delaySec = 60;
-  else if(schedulerInterval === '2') delaySec = 120;
-  else if(schedulerInterval === '5') delaySec = 300;
-  else if(schedulerInterval === '10') delaySec = 600;
-  else if(schedulerInterval === 'random') {
-    const randomMins = Math.floor(Math.random() * 14) + 1;
-    delaySec = randomMins * 60;
-  }
-
-  nextRunSeconds = delaySec;
-  updateSchedulerUI();
-
-  if(countdownTimer) clearInterval(countdownTimer);
-  countdownTimer = setInterval(() => {
-    if(!schedulerEnabled){ clearInterval(countdownTimer); return; }
-    nextRunSeconds--;
-    if(nextRunSeconds < 0) nextRunSeconds = 0;
-    updateSchedulerUI();
-  }, 1000);
-
-  if(schedulerTimer) clearTimeout(schedulerTimer);
-  schedulerTimer = setTimeout(async () => {
-    try {
-      await executeScheduledSend();
-    } catch(err) {
-      console.error('Scheduled send error:', err);
-    } finally {
-      if(schedulerEnabled) scheduleNextRun();
-    }
-  }, delaySec * 1000);
-}
-
-async function executeScheduledSend(){
-  if(state.desks.length > 0){
-    const validDesk = state.desks.find(d => d.senderEmail && d.hasPassword) || state.desks[0];
-    let stateChanged = false;
-    state.contacts.forEach(c => {
-      if(!c.accountId){ c.accountId = validDesk.id; c.templateIdx = 0; stateChanged = true; }
-    });
-    if(stateChanged) saveState();
-  }
-
-  const candidate = state.contacts.find(c => {
-    if(c.isSpam || c.replied || c.closed) return false;
-    const acct = deskById(c.accountId);
-    if(!acct || !acct.senderEmail || !acct.hasPassword || !c.email) return false;
-    const stage = contactStage(c).status;
-    return stage === 'pending' || stage === 'due';
-  });
-
-  if(!candidate){
-    const pendingOrDue = state.contacts.some(c => {
-      if(c.isSpam || c.replied || c.closed) return false;
-      const s = contactStage(c).status;
-      return s === 'pending' || s === 'due';
-    });
-    if(!pendingOrDue && state.contacts.length > 0){
-      stopScheduler();
-      toast('🎉 All emails sent! Scheduler automatically stopped.');
-      return;
-    }
-    const invalidDesk = state.desks.find(d => !d.hasPassword || !d.senderEmail);
-    if(invalidDesk){
-      toast(`⚠️ Desk "${invalidDesk.name}" needs a 16-character App Password under Settings to send.`);
-    } else {
-      toast('Scheduler check: No pending contacts ready for outreach.');
-    }
-    return;
-  }
-
-  const email = composeEmail(candidate);
-  const ok = await sendViaGmail(candidate, email);
-  if(ok){
-    if(email.kind === 'initial'){ candidate.sentDate = new Date().toISOString(); }
-    else if(email.kind === 'followup'){ candidate.followupsSent.push({stage: email.stage, date: new Date().toISOString()}); }
-    saveState(); render();
-    toast(`⏰ Auto-scheduled email sent to ${candidate.name} (${candidate.email})`);
-  }
-}
-
-function updateSchedulerUI(){
-  const badge = document.getElementById('schedulerBadge');
-  if(!badge) return;
-  if(schedulerEnabled){
-    badge.className = 'scheduler-badge';
-    const m = Math.floor(nextRunSeconds / 60);
-    const s = nextRunSeconds % 60;
-    const timeStr = `${m}:${s < 10 ? '0' : ''}${s}`;
-    badge.textContent = `🟢 Scheduler ON (${schedulerInterval==='random'?'Random':'Interval'}) — Next send in ${timeStr}`;
-  } else {
-    badge.className = 'scheduler-badge disabled';
-    badge.textContent = `⏰ Scheduler OFF`;
-  }
-}
-
-// ---- Follow-up rules modal ----
-function openFollowupModal(){
-  const modal = document.getElementById('followupModal');
-  modal.innerHTML = `
-    <button class="btn-sm btn-ghost modal-close" id="closeFollowupModal">Close</button>
-    <h2>Auto Follow-up Rules (Sequenced)</h2>
-    <p class="sub">If a contact does NOT reply, follow-up emails are automatically triggered in sequence (Day 3 -> Day 6 -> Day 10). When a contact replies, follow-ups are immediately halted!</p>
-    <div id="followupBlocks"></div>
-    <div class="modal-actions">
-      <button class="btn-primary" id="saveFollowupsBtn">Save schedule</button>
-      <button class="btn-ghost" id="resetFollowupsBtn">Reset to default</button>
-    </div>
-  `;
-  renderFollowupBlocks();
-  document.getElementById('closeFollowupModal').onclick = ()=> document.getElementById('followupBackdrop').classList.remove('open');
-  document.getElementById('saveFollowupsBtn').onclick = ()=>{
-    const blocks = document.querySelectorAll('.followup-block');
-    const updated = [];
-    blocks.forEach((b,i)=>{
-      const day = Number(b.querySelector('.fu-day').value) || (i+1)*3;
-      const subject = b.querySelector('.fu-subject').value;
-      const body = b.querySelector('.fu-body').value;
-      updated.push({ stage:i+1, day, subject, body });
-    });
-    updated.sort((a,b)=>a.day-b.day).forEach((f,i)=>f.stage=i+1);
-    state.followups = updated;
-    saveState();
-    render();
-    document.getElementById('followupBackdrop').classList.remove('open');
-    toast('Follow-up schedule saved');
-  };
-  document.getElementById('resetFollowupsBtn').onclick = ()=>{
-    state.followups = defaultFollowups();
-    renderFollowupBlocks();
-    toast('Reset to default schedule');
-  };
-  document.getElementById('followupBackdrop').classList.add('open');
-}
-
-function renderFollowupBlocks(){
-  const wrap = document.getElementById('followupBlocks');
-  wrap.innerHTML = state.followups.map((f,i)=>`
-    <div class="followup-block">
-      <h4>Follow-up ${i+1}</h4>
-      <div class="day-row">
-        <span class="hint">Send after</span>
-        <input type="number" class="fu-day" min="1" value="${f.day}">
-        <span class="hint">day(s) with no reply</span>
-      </div>
-      <label>Subject</label>
-      <input class="fu-subject" value="${f.subject.replace(/"/g,'&quot;')}">
-      <label>Body</label>
-      <textarea class="fu-body" style="min-height:100px;">${f.body}</textarea>
-      <p class="hint">Placeholders: {NAME}, {PERSONA} (desk name), {ORIGINAL_SUBJECT}</p>
-    </div>
+  container.innerHTML = filters.map(f => `
+    <button class="btn-sm ${currentFilter === f.key ? 'btn-primary' : 'btn-ghost'}" onclick="setFilter('${f.key}')">${f.label}</button>
   `).join('');
 }
 
-// --- Wiring ---
-document.getElementById('openSettingsBtn').addEventListener('click', openSettingsModal);
-document.getElementById('addDeskBtn').addEventListener('click', ()=> openDeskModal(null));
-document.getElementById('openFollowupRules').addEventListener('click', openFollowupModal);
-document.getElementById('openTemplatesBtn').addEventListener('click', openTemplatesModal);
-document.getElementById('openSchedulerBtn').addEventListener('click', openSchedulerModal);
+function setFilter(k) {
+  currentFilter = k;
+  renderAll();
+}
 
-const noticeBtn = document.getElementById('noticeGoSettings');
-if(noticeBtn) noticeBtn.addEventListener('click', openSettingsModal);
+function renderContacts() {
+  const tbody = document.getElementById('ledgerBody');
+  tbody.innerHTML = '';
 
-document.getElementById('clearDeskFilter').addEventListener('click', ()=>{
-  deskFilter = null;
-  document.getElementById('clearDeskFilter').style.display = 'none';
-  render();
-});
+  let list = state.contacts;
 
-document.getElementById('autoAssignBtn').addEventListener('click', autoAssign);
-document.getElementById('sendAllDueBtn').addEventListener('click', sendAllDue);
-document.getElementById('exportCsvBtn').addEventListener('click', exportCsv);
-document.getElementById('searchBox').addEventListener('input', renderLedger);
+  if (activeDeskFilter) {
+    list = list.filter(c => c.accountId === activeDeskFilter);
+  }
 
-document.getElementById('openAddModal').addEventListener('click', ()=>{
-  document.getElementById('addBackdrop').classList.add('open');
-});
-document.getElementById('closeAddModal').addEventListener('click', ()=>{
-  document.getElementById('addBackdrop').classList.remove('open');
-  document.getElementById('manualFields').style.display='none';
-});
-document.getElementById('parseAddContacts').addEventListener('click', ()=>{
-  const text = document.getElementById('pasteArea').value;
-  const parsed = parsePastedContacts(text);
-  if(parsed.length===0){ toast('No valid contacts found — use "Name, email, market" per line'); return; }
-  addContacts(parsed);
-  document.getElementById('pasteArea').value='';
-  document.getElementById('addBackdrop').classList.remove('open');
-  toast(`Added ${parsed.length} contact(s)`);
-});
-document.getElementById('addOneManual').addEventListener('click', ()=>{
-  document.getElementById('manualFields').style.display='block';
-});
-document.getElementById('addManualBtn').addEventListener('click', ()=>{
-  const name = document.getElementById('manName').value.trim();
-  const email = document.getElementById('manEmail').value.trim();
-  const market = document.getElementById('manMarket').value.trim();
-  if(!name || !email){ toast('Name and email are required'); return; }
-  addContacts([{name,email,market}]);
-  document.getElementById('manName').value='';
-  document.getElementById('manEmail').value='';
-  document.getElementById('manMarket').value='';
-  document.getElementById('manualFields').style.display='none';
-  document.getElementById('addBackdrop').classList.remove('open');
-  toast('Contact added');
-});
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    list = list.filter(c => c.name.toLowerCase().includes(q) || c.email.toLowerCase().includes(q) || c.market.toLowerCase().includes(q));
+  }
 
-document.getElementById('openContactQuoteBtn').addEventListener('click', ()=>{
-  document.getElementById('contactQuoteBackdrop').classList.add('open');
-});
-document.getElementById('closeContactQuoteModal').addEventListener('click', ()=>{
-  document.getElementById('contactQuoteBackdrop').classList.remove('open');
-});
-document.getElementById('submitQuoteFormBtn').addEventListener('click', ()=>{
-  const name = document.getElementById('cqName').value.trim();
-  const email = document.getElementById('cqEmail').value.trim();
-  const desc = document.getElementById('cqDescription').value.trim();
-  if(!name || !email || !desc){
-    toast('Please enter your Name, Email Address, and Project Requirements');
+  if (currentFilter === 'pending') list = list.filter(c => !c.sentDate);
+  if (currentFilter === 'sent') list = list.filter(c => c.sentDate);
+  if (currentFilter === 'opened') list = list.filter(c => c.opened);
+  if (currentFilter === 'clicked') list = list.filter(c => c.clicked);
+  if (currentFilter === 'replied') list = list.filter(c => c.replied);
+  if (currentFilter === 'bounced') list = list.filter(c => c.bounced);
+
+  document.getElementById('emptyState').style.display = list.length === 0 ? 'block' : 'none';
+
+  list.forEach(c => {
+    const tr = document.createElement('tr');
+    const desk = state.desks.find(d => d.id === c.accountId);
+    
+    let statusPill = `<span class="pill pill-pending">Pending</span>`;
+    if (c.bounced) statusPill = `<span class="pill pill-bounced">Bounced</span>`;
+    else if (c.replied) statusPill = `<span class="pill pill-replied">Replied</span>`;
+    else if (c.clicked) statusPill = `<span class="pill pill-clicked">Clicked Link</span>`;
+    else if (c.opened) statusPill = `<span class="pill pill-opened">Opened</span>`;
+    else if (c.sentDate) statusPill = `<span class="pill pill-sent">Sent</span>`;
+
+    tr.innerHTML = `
+      <td class="name-cell">
+        <strong>${c.name}</strong>
+        <span class="em">${c.email}</span>
+      </td>
+      <td>${c.market || '—'}</td>
+      <td>${desk ? desk.name : 'Unassigned'}</td>
+      <td>${statusPill}</td>
+      <td>
+        ${c.opened ? `<span style="color:var(--emerald);font-weight:600;">Opened ${c.openedDate ? new Date(c.openedDate).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : ''}</span>` : '<span style="color:var(--ink-soft);">No</span>'}
+        ${c.clicked ? `<br><span style="color:var(--slate);font-size:11px;font-weight:600;">🔗 Clicked</span>` : ''}
+      </td>
+      <td>${c.sentDate ? new Date(c.sentDate).toLocaleDateString() : '—'}</td>
+      <td>
+        <button class="btn-sm btn-ghost" onclick="sendSingleDirect('${c.id}')">✉ Direct Send</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// Single Direct Send
+async function sendSingleDirect(contactId) {
+  const contact = state.contacts.find(c => c.id === contactId);
+  if (!contact) return;
+  const desk = state.desks.find(d => d.id === contact.accountId) || state.desks[0];
+
+  if (!desk) {
+    showToast('Please create a desk with valid credentials first');
     return;
   }
-  document.getElementById('contactQuoteBackdrop').classList.remove('open');
-  toast('Requirements submitted! We will evaluate and reply with a custom quote.');
-});
 
-[
-  document.getElementById('autoAssignBackdrop'),
-  document.getElementById('settingsBackdrop'),
-  document.getElementById('addBackdrop'),
-  document.getElementById('detailBackdrop'),
-  document.getElementById('deskBackdrop'),
-  document.getElementById('followupBackdrop'),
-  document.getElementById('templateBackdrop'),
-  document.getElementById('schedulerBackdrop'),
-  document.getElementById('contactQuoteBackdrop')
-].forEach(bd=>{
-  if(bd){
-    bd.addEventListener('click', (e)=>{ if(e.target===bd) bd.classList.remove('open'); });
+  showToast(`Sending email to ${contact.name}...`);
+  try {
+    const res = await fetch('/api/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        deskId: desk.id,
+        to: contact.email,
+        subject: desk.subject || 'Outreach',
+        body: desk.body || '',
+        contactId: contact.id
+      })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      showToast('Email sent successfully!');
+      contact.sentDate = new Date().toISOString();
+      await saveState();
+    } else {
+      showToast(`Error: ${data.error}`);
+    }
+  } catch (e) {
+    showToast('Failed to send email');
+  }
+}
+
+// ---- Campaign Management ----
+function openCampaignModal() {
+  const sel = document.getElementById('cmpDeskSelect');
+  sel.innerHTML = state.desks.map(d => `<option value="${d.id}">${d.name} (${d.senderEmail})</option>`).join('');
+  document.getElementById('campaignBackdrop').classList.add('open');
+}
+
+function closeCampaignModal() {
+  document.getElementById('campaignBackdrop').classList.remove('open');
+}
+
+document.getElementById('launchCampaignBtn').addEventListener('click', async () => {
+  const name = document.getElementById('cmpName').value.trim();
+  const deskId = document.getElementById('cmpDeskSelect').value;
+  const subject = document.getElementById('cmpSubject').value.trim();
+  const body = document.getElementById('cmpBody').value.trim();
+  const recipientsType = document.getElementById('cmpRecipients').value;
+
+  if (!name || !deskId || !subject || !body) {
+    showToast('Please fill all required fields');
+    return;
+  }
+
+  let contactIds = [];
+  if (recipientsType === 'unsent') {
+    contactIds = state.contacts.filter(c => !c.sentDate).map(c => c.id);
+  } else {
+    contactIds = state.contacts.map(c => c.id);
+  }
+
+  try {
+    const res = await fetch('/api/campaigns', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, deskId, subject, body, contactIds })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      showToast('Campaign created and queued!');
+      closeCampaignModal();
+      switchTab('campaigns');
+      loadCampaigns();
+    } else {
+      showToast(`Error: ${data.error}`);
+    }
+  } catch (e) {
+    showToast('Failed to launch campaign');
   }
 });
 
-// Init
-(async function init(){
-  await loadState();
-  render();
-})();
+async function loadCampaigns() {
+  try {
+    const res = await fetch('/api/campaigns');
+    const data = await res.json();
+    if (data.ok) {
+      renderCampaignsTable(data.campaigns);
+      checkActiveCampaign(data.campaigns);
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+function checkActiveCampaign(campaigns) {
+  const active = campaigns.find(c => c.status === 'sending' || c.status === 'queued');
+  const banner = document.getElementById('activeCampaignBanner');
+
+  if (!active) {
+    banner.style.display = 'none';
+    return;
+  }
+
+  banner.style.display = 'block';
+  document.getElementById('acName').textContent = active.name;
+  document.getElementById('acStatus').textContent = active.status.toUpperCase();
+  document.getElementById('acStatus').className = `ac-status ${active.status}`;
+
+  const pct = active.total_recipients > 0 ? Math.round((active.sent_count / active.total_recipients) * 100) : 0;
+  document.getElementById('acProgressFill').style.width = `${pct}%`;
+  document.getElementById('acProgressText').textContent = `${active.sent_count} / ${active.total_recipients} (${pct}%)`;
+
+  document.getElementById('acSentCount').textContent = active.sent_count;
+  document.getElementById('acOpenedCount').textContent = active.opened_count;
+  document.getElementById('acClickedCount').textContent = active.clicked_count;
+  document.getElementById('acErrorCount').textContent = active.error_count;
+}
+
+function renderCampaignsTable(campaigns) {
+  const tbody = document.getElementById('campaignsTableBody');
+  tbody.innerHTML = '';
+
+  campaigns.forEach(c => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><strong>${c.name}</strong></td>
+      <td><span class="pill pill-${c.status === 'completed' ? 'done' : (c.status === 'sending' ? 'sent' : 'pending')}">${c.status}</span></td>
+      <td>${c.total_recipients}</td>
+      <td>${c.sent_count} / ${c.delivered_count || c.sent_count}</td>
+      <td><strong style="color:var(--emerald);">${c.opened_count}</strong></td>
+      <td><strong style="color:var(--slate);">${c.clicked_count}</strong></td>
+      <td>${new Date(c.created_at).toLocaleDateString()}</td>
+      <td>
+        <button class="btn-sm btn-ghost" onclick="switchTab('analytics')">📊 View Stats</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// ---- Analytics & Timeline ----
+async function loadAnalytics() {
+  try {
+    const res = await fetch('/api/analytics/summary');
+    const data = await res.json();
+    if (data.ok) {
+      document.getElementById('mTotalCampaigns').textContent = data.stats.totalCampaigns;
+      document.getElementById('mTotalSent').textContent = data.stats.totalSent;
+      document.getElementById('mOpenRate').textContent = `${data.stats.openRate}%`;
+      document.getElementById('mTotalOpens').textContent = `${data.stats.totalOpened} unique opens`;
+      document.getElementById('mCtr').textContent = `${data.stats.ctr}%`;
+      document.getElementById('mTotalClicks').textContent = `${data.stats.totalClicked} total clicks`;
+      document.getElementById('mReplied').textContent = data.stats.totalReplied;
+
+      renderTimeline(data.recentEvents);
+      renderOpensLog(data.recentOpens);
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+function renderTimeline(events) {
+  const container = document.getElementById('timelineFeed');
+  container.innerHTML = '';
+  if (!events || events.length === 0) {
+    container.innerHTML = `<div style="color:var(--ink-soft);font-size:13px;">No events recorded yet.</div>`;
+    return;
+  }
+
+  events.slice(0, 30).forEach(ev => {
+    const div = document.createElement('div');
+    div.className = `timeline-item ${ev.event_type}`;
+    div.innerHTML = `
+      <div class="timeline-time">${new Date(ev.created_at).toLocaleTimeString()}</div>
+      <div class="timeline-text">${ev.details || ev.event_type}</div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function renderOpensLog(opens) {
+  const container = document.getElementById('opensLog');
+  container.innerHTML = '';
+  if (!opens || opens.length === 0) {
+    container.innerHTML = `<div style="color:var(--ink-soft);font-size:13px;">No open tracking logs yet.</div>`;
+    return;
+  }
+
+  opens.forEach(o => {
+    const div = document.createElement('div');
+    div.style.cssText = 'padding:10px;border-bottom:1px solid var(--line);font-size:12.5px;';
+    div.innerHTML = `
+      <div style="font-weight:600;color:var(--emerald);">Opened by contact ${o.contact_id || ''}</div>
+      <div style="font-size:11px;color:var(--ink-soft);">${new Date(o.opened_at).toLocaleString()} • ${o.browser} (${o.os}, ${o.device}) • IP: ${o.ip}</div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+// Templates Manager
+async function loadTemplates() {
+  try {
+    const res = await fetch('/api/templates');
+    const data = await res.json();
+    if (data.ok) {
+      const container = document.getElementById('templatesList');
+      container.innerHTML = data.templates.map(t => `
+        <div style="border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px;background:var(--surface);">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <strong>${t.name}</strong>
+            <button class="icon-btn" onclick="deleteTemplate('${t.id}')">🗑️</button>
+          </div>
+          <div style="font-size:12px;color:var(--primary);margin:4px 0;font-weight:600;">${t.subject}</div>
+          <div style="font-size:12px;color:var(--ink-soft);max-height:50px;overflow:hidden;">${t.body}</div>
+        </div>
+      `).join('');
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+async function openNewTemplateDialog() {
+  const name = prompt('Template Name:');
+  if (!name) return;
+  const subject = prompt('Subject line:');
+  const body = prompt('Email Body:');
+
+  await fetch('/api/templates', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, subject, body })
+  });
+  loadTemplates();
+}
+
+async function deleteTemplate(id) {
+  if (!confirm('Delete template?')) return;
+  await fetch(`/api/templates/${id}`, { method: 'DELETE' });
+  loadTemplates();
+}
+
+// Event Listeners
+document.getElementById('openAddModal').addEventListener('click', () => {
+  document.getElementById('addBackdrop').classList.add('open');
+});
+document.getElementById('closeAddModal').addEventListener('click', () => {
+  document.getElementById('addBackdrop').classList.remove('open');
+});
+
+document.getElementById('parseAddContacts').addEventListener('click', async () => {
+  const raw = document.getElementById('pasteArea').value.trim();
+  if (!raw) return;
+
+  const lines = raw.split('\n');
+  lines.forEach(line => {
+    const parts = line.split(',').map(s => s.trim());
+    if (parts[0]) {
+      state.contacts.push({
+        id: 'c_' + Math.random().toString(36).substr(2, 9),
+        name: parts[0],
+        email: parts[1] || '',
+        market: parts[2] || '',
+        accountId: state.desks[0]?.id || null,
+        sentDate: null,
+        opened: false,
+        clicked: false,
+        replied: false,
+        bounced: false
+      });
+    }
+  });
+
+  document.getElementById('pasteArea').value = '';
+  document.getElementById('addBackdrop').classList.remove('open');
+  await saveState();
+  showToast('Contacts added successfully!');
+});
+
+document.getElementById('searchBox').addEventListener('input', (e) => {
+  searchQuery = e.target.value;
+  renderContacts();
+});
+
+// Auto Poll for background queue progress every 3s
+setInterval(() => {
+  const activeTab = document.querySelector('.nav-tab.active')?.getAttribute('onclick');
+  if (activeTab && activeTab.includes('campaigns')) {
+    loadCampaigns();
+  }
+}, 3000);
+
+fetchState();
 </script>
 </body>
 </html>

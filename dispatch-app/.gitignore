@@ -1,0 +1,5 @@
+node_modules/
+dispatch.db-shm
+dispatch.db-wal
+*.log
+.DS_Store
