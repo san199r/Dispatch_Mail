@@ -612,6 +612,32 @@ const server = createServer(async (req, res) => {
       return;
     }
 
+    // Test SMTP Credentials
+    if (req.method === 'POST' && pathname === '/api/test-smtp') {
+      const raw = await readBody(req);
+      const { senderEmail, appPassword, testRecipient } = JSON.parse(raw);
+      if (!senderEmail || !appPassword) {
+        sendJson(res, 400, { ok: false, error: 'Sender email and app password are required' });
+        return;
+      }
+      try {
+        const t = transporterFor(senderEmail, appPassword);
+        await t.verify();
+        if (testRecipient) {
+          await t.sendMail({
+            from: senderEmail,
+            to: testRecipient,
+            subject: 'Dispatch Board — SMTP Test Email',
+            text: 'Your SMTP credentials have been successfully verified!'
+          });
+        }
+        sendJson(res, 200, { ok: true, message: 'SMTP credentials verified successfully!' });
+      } catch (err) {
+        sendJson(res, 400, { ok: false, error: String(err && err.message || err) });
+      }
+      return;
+    }
+
     // ---- Open Tracking Endpoint ----------------------------------------
     if (req.method === 'GET' && pathname.startsWith('/api/track-open/')) {
       const trackId = pathname.replace('/api/track-open/', '');

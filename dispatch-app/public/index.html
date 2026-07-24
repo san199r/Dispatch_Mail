@@ -805,11 +805,26 @@ function renderContacts() {
       </td>
       <td>${c.sentDate ? new Date(c.sentDate).toLocaleDateString() : '—'}</td>
       <td>
-        <button class="btn-sm btn-ghost" onclick="sendSingleDirect('${c.id}')">✉ Direct Send</button>
+        <div style="display:flex;gap:4px;align-items:center;">
+          <button class="btn-sm btn-ghost" onclick="sendSingleDirect('${c.id}')">✉ Direct Send</button>
+          ${c.sentDate ? `<button class="btn-sm icon-btn" title="Reset Status to Pending" onclick="resetContactStatus('${c.id}')">🔄</button>` : ''}
+        </div>
       </td>
     `;
     tbody.appendChild(tr);
   });
+}
+
+async function resetContactStatus(contactId) {
+  const contact = state.contacts.find(c => c.id === contactId);
+  if (!contact) return;
+  contact.sentDate = null;
+  contact.opened = false;
+  contact.clicked = false;
+  contact.replied = false;
+  contact.bounced = false;
+  await saveState();
+  showToast(`Status reset to Pending for ${contact.name}`);
 }
 
 // Single Direct Send
@@ -891,12 +906,42 @@ function openDeskModal(deskId = null) {
       💡 Generate your password in Google Account &rarr; Security &rarr; 2-Step Verification &rarr; App Passwords.
     </small>
 
-    <div class="modal-actions">
-      <button class="btn-primary" onclick="saveDeskModal('${desk ? desk.id : ''}')" style="width:100%;padding:12px;margin-top:10px;">💾 Save Mail Credentials</button>
+    <div class="modal-actions" style="margin-top:14px;display:flex;gap:8px;">
+      <button class="btn-ghost" onclick="testSmtpConnection('${desk ? desk.id : ''}')" style="flex:1;padding:10px;">⚡ Test SMTP</button>
+      <button class="btn-primary" onclick="saveDeskModal('${desk ? desk.id : ''}')" style="flex:2;padding:10px;">💾 Save Credentials</button>
     </div>
   `;
 
   document.getElementById('deskBackdrop').classList.add('open');
+}
+
+async function testSmtpConnection(existingId) {
+  const senderEmail = document.getElementById('dmSenderEmail').value.trim();
+  const appPassword = document.getElementById('dmAppPassword').value.trim();
+  const desk = existingId ? state.desks.find(d => d.id === existingId) : null;
+  const passwordToUse = appPassword || (desk ? desk.appPassword : '');
+
+  if (!senderEmail || !passwordToUse) {
+    showToast('Please enter both Sender Email and App Password to test');
+    return;
+  }
+
+  showToast('Testing SMTP connection to Gmail...');
+  try {
+    const res = await fetch('/api/test-smtp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ senderEmail, appPassword: passwordToUse })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      showToast('✅ SMTP Connection Successful! Credentials are valid.');
+    } else {
+      showToast(`❌ SMTP Error: ${data.error}`);
+    }
+  } catch (e) {
+    showToast('❌ Failed to test SMTP connection');
+  }
 }
 
 function closeDeskModal() {
@@ -1177,9 +1222,47 @@ async function deleteTemplate(id) {
 }
 
 // Event Listeners
-document.getElementById('addDeskBtn').addEventListener('click', () => openDeskModal());
-document.getElementById('openSettingsBtn').addEventListener('click', () => openSettingsModal());
-document.getElementById('noticeGoSettings').addEventListener('click', () => openSettingsModal());
+document.getElementById('addDeskBtn')?.addEventListener('click', () => openDeskModal());
+document.getElementById('openSettingsBtn')?.addEventListener('click', () => openSettingsModal());
+document.getElementById('noticeGoSettings')?.addEventListener('click', () => openSettingsModal());
+document.getElementById('openCreateCampaignBtn')?.addEventListener('click', () => openCampaignModal());
+document.getElementById('openContactQuoteBtn')?.addEventListener('click', () => {
+  document.getElementById('contactQuoteBackdrop').classList.add('open');
+});
+document.getElementById('closeContactQuoteModal')?.addEventListener('click', () => {
+  document.getElementById('contactQuoteBackdrop').classList.remove('open');
+});
+document.getElementById('submitQuoteFormBtn')?.addEventListener('click', () => {
+  showToast('Request for quote submitted!');
+  document.getElementById('contactQuoteBackdrop').classList.remove('open');
+});
+document.getElementById('autoAssignBtn')?.addEventListener('click', () => {
+  if (state.desks.length === 0) {
+    showToast('Please create at least one sending desk first');
+    return;
+  }
+  state.contacts.forEach((c, idx) => {
+    c.accountId = state.desks[idx % state.desks.length].id;
+  });
+  saveState();
+  showToast('Contacts auto-assigned across desks!');
+});
+document.getElementById('exportCsvBtn')?.addEventListener('click', () => {
+  if (!state.contacts || state.contacts.length === 0) {
+    showToast('No contacts to export');
+    return;
+  }
+  let csv = 'Name,Email,Market,Status,SentDate\n';
+  state.contacts.forEach(c => {
+    csv += `"${c.name}","${c.email}","${c.market}","${c.sentDate ? 'Sent' : 'Pending'}","${c.sentDate || ''}"\n`;
+  });
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'contacts.csv';
+  a.click();
+  showToast('Contacts exported to CSV!');
+});
 
 document.getElementById('openAddModal').addEventListener('click', () => {
   document.getElementById('addBackdrop').classList.add('open');
