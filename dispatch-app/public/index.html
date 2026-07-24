@@ -1664,6 +1664,16 @@ async function executeScheduledSend(){
   });
 
   if(!candidate){
+    const pendingOrDue = state.contacts.some(c => {
+      if(c.isSpam || c.replied || c.closed) return false;
+      const s = contactStage(c).status;
+      return s === 'pending' || s === 'due';
+    });
+    if(!pendingOrDue && state.contacts.length > 0){
+      stopScheduler();
+      toast('🎉 All emails sent! Scheduler automatically stopped.');
+      return;
+    }
     const invalidDesk = state.desks.find(d => !d.hasPassword || !d.senderEmail);
     if(invalidDesk){
       toast(`⚠️ Desk "${invalidDesk.name}" needs a 16-character App Password under Settings to send.`);
