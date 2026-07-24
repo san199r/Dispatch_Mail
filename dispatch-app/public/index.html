@@ -273,6 +273,7 @@
           <input id="searchBox" placeholder="Search contact name, email, market…">
           <button class="btn-sm btn-ghost" id="resetAllStatusBtn">🔄 Reset All Status</button>
           <button class="btn-sm btn-ghost" id="exportCsvBtn">Export CSV</button>
+          <button class="btn-sm btn-danger" id="clearAllDataBtn" style="background:#EF4444;color:#fff;">🗑️ Clear All Data</button>
         </div>
 
         <div class="outreach-summary" id="outreachSummary"></div>
@@ -1257,6 +1258,23 @@ document.getElementById('exportCsvBtn')?.addEventListener('click', () => {
   a.download = 'contacts.csv';
   a.click();
   showToast('Contacts exported to CSV!');
+});
+
+document.getElementById('clearAllDataBtn')?.addEventListener('click', async () => {
+  if (!confirm('⚠️ Are you sure you want to clear ALL contacts, desks, and campaigns? This will reset the app completely.')) return;
+  try {
+    const res = await fetch('/api/clear-all', { method: 'POST' });
+    const data = await res.json();
+    if (data.ok) {
+      state = { desks: [], followups: [], contacts: [] };
+      renderAll();
+      showToast('🗑️ All data cleared successfully! Board reset.');
+    } else {
+      showToast(`Error: ${data.error}`);
+    }
+  } catch (e) {
+    showToast('Failed to clear data');
+  }
 });
 
 document.getElementById('openAddModal').addEventListener('click', () => {

@@ -596,6 +596,26 @@ const server = createServer(async (req, res) => {
       return;
     }
 
+    // Clear All Database Data
+    if (req.method === 'POST' && pathname === '/api/clear-all') {
+      try {
+        db.exec(`
+          DELETE FROM contacts;
+          DELETE FROM desks;
+          DELETE FROM campaigns;
+          DELETE FROM campaign_emails;
+          DELETE FROM email_events;
+          DELETE FROM email_opens;
+          DELETE FROM email_clicks;
+          DELETE FROM followups_sent;
+        `);
+        sendJson(res, 200, { ok: true, message: 'All data cleared successfully' });
+      } catch (err) {
+        sendJson(res, 500, { ok: false, error: err.message });
+      }
+      return;
+    }
+
     // Single Direct Email Send
     if (req.method === 'POST' && pathname === '/api/send') {
       const raw = await readBody(req);
