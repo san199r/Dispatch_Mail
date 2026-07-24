@@ -627,7 +627,8 @@ const server = createServer(async (req, res) => {
         const result = await sendEmail({ ...payload, reqHost });
         sendJson(res, 200, { ok: true, ...result });
       } catch (err) {
-        sendJson(res, 400, { ok: false, error: String(err && err.message || err) });
+        console.error('Send email error:', err);
+        sendJson(res, 200, { ok: false, error: String(err && err.message || err) });
       }
       return;
     }
@@ -637,7 +638,7 @@ const server = createServer(async (req, res) => {
       const raw = await readBody(req);
       const { senderEmail, appPassword, testRecipient } = JSON.parse(raw);
       if (!senderEmail || !appPassword) {
-        sendJson(res, 400, { ok: false, error: 'Sender email and app password are required' });
+        sendJson(res, 200, { ok: false, error: 'Sender email and app password are required' });
         return;
       }
       try {
@@ -653,7 +654,8 @@ const server = createServer(async (req, res) => {
         }
         sendJson(res, 200, { ok: true, message: 'SMTP credentials verified successfully!' });
       } catch (err) {
-        sendJson(res, 400, { ok: false, error: String(err && err.message || err) });
+        console.error('Test SMTP error:', err);
+        sendJson(res, 200, { ok: false, error: String(err && err.message || err) });
       }
       return;
     }
