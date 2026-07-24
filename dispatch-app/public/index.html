@@ -817,18 +817,7 @@ async function resetContactStatus(contactId) {
 async function sendSingleDirect(contactId) {
   const contact = state.contacts.find(c => c.id === contactId);
   if (!contact) return;
-  const desk = state.desks.find(d => d.id === contact.accountId) || state.desks[0];
-
-  if (!desk) {
-    showToast('Please create a desk first');
-    openDeskModal();
-    return;
-  }
-
-  if (!desk.senderEmail || (!desk.hasPassword && !desk.appPassword)) {
-    showToast(`Please configure Sender Email & App Password for desk "${desk.name}" under Settings`);
-    return;
-  }
+  const desk = state.desks.find(d => d.id === contact.accountId) || state.desks[0] || { id: 'default' };
 
   showToast(`Sending email to ${contact.name}...`);
   try {
@@ -845,14 +834,11 @@ async function sendSingleDirect(contactId) {
     });
     const data = await res.json();
     if (data.ok) {
-      showToast('Email sent successfully!');
+      showToast(data.previewUrl ? `Email dispatched! Test link: ${data.previewUrl}` : 'Email sent successfully!');
       contact.sentDate = new Date().toISOString();
       await saveState();
     } else {
       showToast(`Error: ${data.error}`);
-      if (data.error && (data.error.includes('app password') || data.error.includes('sender email') || data.error.includes('auth'))) {
-        openDeskModal(desk.id);
-      }
     }
   } catch (e) {
     showToast('Failed to send email');

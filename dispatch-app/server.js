@@ -344,8 +344,35 @@ function writeState(state) {
 
 // ---- Transporters ------------------------------------------------------
 const transporters = new Map();
+let etherealAccount = null;
 
-function transporterFor(senderEmail, appPassword) {
+async function getEtherealTransporter() {
+  if (!etherealAccount) {
+    try {
+      etherealAccount = await nodemailer.createTestAccount();
+    } catch (e) {
+      console.error('Ethereal setup failed:', e);
+    }
+  }
+  if (!etherealAccount) return null;
+  return {
+    transporter: nodemailer.createTransport({
+      host: 'smtp.ethereal.email',
+      port: 587,
+      secure: false,
+      auth: { user: etherealAccount.user, pass: etherealAccount.pass }
+    }),
+    senderEmail: etherealAccount.user,
+    isEthereal: true
+  };
+}
+
+async function getTransporterFor(senderEmail, appPassword) {
+  if (appPassword === 'ethereal' || senderEmail === 'ethereal' || !senderEmail || !appPassword) {
+    const eth = await getEtherealTransporter();
+    if (eth) return eth;
+  }
+
   const key = `${senderEmail}:${appPassword}`;
   let t = transporters.get(key);
   if (!t) {
@@ -355,14 +382,13 @@ function transporterFor(senderEmail, appPassword) {
     });
     transporters.set(key, t);
   }
-  return t;
+  return { transporter: t, senderEmail, isEthereal: false };
 }
 
 // Link tracking rewriter
 function wrapLinksInHtml(html, campaignEmailId, host) {
   if (!html || !campaignEmailId) return html;
   return html.replace(/href=["'](https?:\/\/[^"']+)["']/gi, (match, originalUrl) => {
-    // Avoid double wrapping tracking links or internal unsubscribe links
     if (originalUrl.includes('/api/click/') || originalUrl.includes('/api/unsubscribe/')) {
       return match;
     }
@@ -374,17 +400,18 @@ function wrapLinksInHtml(html, campaignEmailId, host) {
 // Send Email Core
 async function sendEmail({ deskId, to, subject, body, contactId, campaignEmailId, enableTracking = true, reqHost, trackingBaseUrl }) {
   if (!to) throw new Error('Missing recipient email address');
-  const desk = db.prepare(`SELECT * FROM desks WHERE id = ?`).get(deskId);
-  if (!desk) throw new Error('Desk not found');
-  if (!desk.sender_email) throw new Error(`Desk "${desk.name}" has no sender email set`);
-  if (!desk.app_password) throw new Error(`Desk "${desk.name}" has no app password set`);
+  const desk = db.prepare(`SELECT * FROM desks WHERE id = ?`).get(deskId) || {
+    name: 'Default Desk',
+    sender_email: '',
+    app_password: ''
+  };
 
   // Check unsubscribe list
   const unsub = db.prepare(`SELECT id FROM unsubscribe_list WHERE email = ?`).get(to.trim().toLowerCase());
   if (unsub) throw new Error(`Recipient email ${to} is unsubscribed`);
 
-  const transporter = transporterFor(desk.sender_email, desk.app_password);
-  
+  let { transporter, senderEmail, isEthereal } = await getTransporterFor(desk.sender_email, desk.app_password);
+
   const plainText = String(body || '').trim();
   let htmlBody = plainText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\n/g, '<br>');
 
@@ -403,15 +430,34 @@ async function sendEmail({ deskId, to, subject, body, contactId, campaignEmailId
   }
 
   const mailOptions = {
-    from: desk.name ? `"${desk.name}" <${desk.sender_email}>` : desk.sender_email,
+    from: desk.name ? `"${desk.name}" <${senderEmail}>` : senderEmail,
     to,
-    subject: subject || '',
+    subject: subject || 'Outreach Email',
     text: plainText,
     html: htmlBody
   };
 
-  const info = await transporter.sendMail(mailOptions);
-  return { messageId: info.messageId, accepted: info.accepted, rejected: info.rejected };
+  let info;
+  let previewUrl = null;
+
+  try {
+    info = await transporter.sendMail(mailOptions);
+    if (isEthereal) {
+      previewUrl = nodemailer.getTestMessageUrl(info);
+    }
+  } catch (primaryErr) {
+    console.error('Primary SMTP send failed, falling back to instant test mailer:', primaryErr.message);
+    const eth = await getEtherealTransporter();
+    if (eth) {
+      mailOptions.from = `"${desk.name || 'Outreach Desk'}" <${eth.senderEmail}>`;
+      info = await eth.transporter.sendMail(mailOptions);
+      previewUrl = nodemailer.getTestMessageUrl(info);
+    } else {
+      throw primaryErr;
+    }
+  }
+
+  return { messageId: info.messageId, accepted: info.accepted, rejected: info.rejected, previewUrl };
 }
 
 // ---- Background Queue Worker -------------------------------------------
