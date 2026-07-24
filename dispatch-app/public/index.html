@@ -593,11 +593,20 @@ function getFilteredBaseContacts() {
 }
 
 function renderAll() {
+  checkSetupNotice();
   renderDesks();
   renderSummaryCards();
   renderContacts();
   renderFilters();
   updateWebhooksUI();
+}
+
+function checkSetupNotice() {
+  const hasValidDesk = state.desks.some(d => d.senderEmail && (d.hasPassword || d.appPassword));
+  const notice = document.getElementById('setupNotice');
+  if (notice) {
+    notice.style.display = hasValidDesk ? 'none' : 'flex';
+  }
 }
 
 function updateWebhooksUI() {
@@ -810,7 +819,14 @@ async function sendSingleDirect(contactId) {
   const desk = state.desks.find(d => d.id === contact.accountId) || state.desks[0];
 
   if (!desk) {
-    showToast('Please create a desk with valid credentials first');
+    showToast('Please create a desk first');
+    openDeskModal();
+    return;
+  }
+
+  if (!desk.senderEmail || (!desk.hasPassword && !desk.appPassword)) {
+    showToast(`Desk "${desk.name}" needs Mail Credentials (Sender Email & App Password)`);
+    openDeskModal(desk.id);
     return;
   }
 
@@ -834,9 +850,117 @@ async function sendSingleDirect(contactId) {
       await saveState();
     } else {
       showToast(`Error: ${data.error}`);
+      if (data.error && (data.error.includes('app password') || data.error.includes('sender email') || data.error.includes('auth'))) {
+        openDeskModal(desk.id);
+      }
     }
   } catch (e) {
     showToast('Failed to send email');
+  }
+}
+
+// ---- Desk Credentials & Settings Management ----
+function openDeskModal(deskId = null) {
+  const desk = deskId ? state.desks.find(d => d.id === deskId) : null;
+  const modal = document.getElementById('deskModal');
+  if (!modal) return;
+  
+  modal.innerHTML = `
+    <button class="btn-sm btn-ghost modal-close" onclick="closeDeskModal()">Close</button>
+    <h2>${desk ? 'Edit Sending Desk' : 'Add New Sending Desk'}</h2>
+    <p class="sub">Configure your Gmail address & 16-character App Password to start dispatching emails.</p>
+
+    <label>Desk Name *</label>
+    <input id="dmName" value="${desk ? (desk.name || '') : ''}" placeholder="e.g. Kiran / Sales Desk">
+
+    <label>Outreach Angle / Campaign Tag</label>
+    <input id="dmAngle" value="${desk ? (desk.angle || '') : ''}" placeholder="e.g. 4-Template Outreach">
+
+    <label>Default Email Subject *</label>
+    <input id="dmSubject" value="${desk ? (desk.subject || '') : ''}" placeholder="Quick question regarding {MARKET}">
+
+    <label>Default Email Body</label>
+    <textarea id="dmBody" style="min-height:100px;" placeholder="Hi {NAME},&#10;&#10;I saw your work in {MARKET}...">${desk ? (desk.body || '') : ''}</textarea>
+
+    <label style="color:var(--primary);font-weight:700;">Sender Gmail Address *</label>
+    <input id="dmSenderEmail" type="email" value="${desk ? (desk.senderEmail || '') : ''}" placeholder="e.g. yourname@gmail.com">
+
+    <label style="color:var(--primary);font-weight:700;">Gmail 16-Char App Password * ${desk && desk.hasPassword ? '<span style="color:var(--emerald);">(Password configured)</span>' : ''}</label>
+    <input id="dmAppPassword" type="password" placeholder="${desk && desk.hasPassword ? '•••••••••••••••• (Leave blank to keep existing)' : 'e.g. abcd efgh ijkl mnop'}">
+    <small style="display:block;color:var(--ink-soft);font-size:11.5px;margin-top:4px;">
+      💡 Generate your password in Google Account &rarr; Security &rarr; 2-Step Verification &rarr; App Passwords.
+    </small>
+
+    <div class="modal-actions">
+      <button class="btn-primary" onclick="saveDeskModal('${desk ? desk.id : ''}')" style="width:100%;padding:12px;margin-top:10px;">💾 Save Mail Credentials</button>
+    </div>
+  `;
+
+  document.getElementById('deskBackdrop').classList.add('open');
+}
+
+function closeDeskModal() {
+  document.getElementById('deskBackdrop').classList.remove('open');
+}
+
+async function saveDeskModal(existingId) {
+  const name = document.getElementById('dmName').value.trim();
+  const angle = document.getElementById('dmAngle').value.trim();
+  const subject = document.getElementById('dmSubject').value.trim();
+  const body = document.getElementById('dmBody').value.trim();
+  const senderEmail = document.getElementById('dmSenderEmail').value.trim();
+  const appPassword = document.getElementById('dmAppPassword').value.trim();
+
+  if (!name || !senderEmail) {
+    showToast('Please enter both Desk Name and Sender Email');
+    return;
+  }
+
+  let desk = existingId ? state.desks.find(d => d.id === existingId) : null;
+  if (!desk) {
+    desk = {
+      id: 'd_' + Math.random().toString(36).substr(2, 9),
+      name, angle, subject, body, senderEmail
+    };
+    if (appPassword) {
+      desk.appPassword = appPassword;
+      desk.hasPassword = true;
+    }
+    state.desks.push(desk);
+  } else {
+    desk.name = name;
+    desk.angle = angle;
+    desk.subject = subject;
+    desk.body = body;
+    desk.senderEmail = senderEmail;
+    if (appPassword) {
+      desk.appPassword = appPassword;
+      desk.hasPassword = true;
+    }
+  }
+
+  closeDeskModal();
+  await saveState();
+  showToast('Desk credentials saved successfully!');
+}
+
+function editDesk(id) {
+  openDeskModal(id);
+}
+
+async function deleteDesk(id) {
+  if (!confirm('Are you sure you want to delete this desk?')) return;
+  state.desks = state.desks.filter(d => d.id !== id);
+  if (activeDeskFilter === id) activeDeskFilter = null;
+  await saveState();
+  showToast('Desk deleted');
+}
+
+function openSettingsModal() {
+  if (state.desks.length > 0) {
+    openDeskModal(state.desks[0].id);
+  } else {
+    openDeskModal();
   }
 }
 
@@ -1053,6 +1177,10 @@ async function deleteTemplate(id) {
 }
 
 // Event Listeners
+document.getElementById('addDeskBtn').addEventListener('click', () => openDeskModal());
+document.getElementById('openSettingsBtn').addEventListener('click', () => openSettingsModal());
+document.getElementById('noticeGoSettings').addEventListener('click', () => openSettingsModal());
+
 document.getElementById('openAddModal').addEventListener('click', () => {
   document.getElementById('addBackdrop').classList.add('open');
 });
