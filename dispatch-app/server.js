@@ -352,7 +352,10 @@ function getTransporterFor(senderEmail, appPassword) {
     if (!t) {
       t = nodemailer.createTransport({
         service: 'gmail',
-        auth: { user: senderEmail, pass: appPassword }
+        auth: { user: senderEmail, pass: appPassword },
+        connectionTimeout: 3000,
+        greetingTimeout: 3000,
+        socketTimeout: 5000
       });
       transporters.set(key, t);
     }
